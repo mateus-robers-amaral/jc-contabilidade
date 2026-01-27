@@ -62,6 +62,8 @@ export function generatePixPayload(params: PixPayloadParams): string {
     pixKey,
     nomeBeneficiario,
     cidade,
+    valor,
+    identificador,
   } = params;
 
   // Normalize strings according to PIX specification
@@ -73,6 +75,13 @@ export function generatePixPayload(params: PixPayloadParams): string {
 
   // ID 00 - Payload Format Indicator (Required, fixed "01")
   payload += formatTLV("00", "01");
+
+  // ID 01 - Point of Initiation Method
+  // "11" = Static (reusable), "12" = Dynamic (one-time use)
+  // Use "12" when valor is defined (unique per transaction)
+  if (valor !== undefined && valor > 0) {
+    payload += formatTLV("01", "12");
+  }
 
   // ID 26 - Merchant Account Information for PIX
   const merchantAccountInfo =
@@ -86,6 +95,12 @@ export function generatePixPayload(params: PixPayloadParams): string {
   // ID 53 - Transaction Currency (Required, "986" = BRL)
   payload += formatTLV("53", "986");
 
+  // ID 54 - Transaction Amount (optional, but included when valor is provided)
+  if (valor !== undefined && valor > 0) {
+    const valorFormatado = valor.toFixed(2);
+    payload += formatTLV("54", valorFormatado);
+  }
+
   // ID 58 - Country Code (Required, "BR")
   payload += formatTLV("58", "BR");
 
@@ -95,8 +110,12 @@ export function generatePixPayload(params: PixPayloadParams): string {
   // ID 60 - Merchant City (Required, max 15 chars)
   payload += formatTLV("60", cidadeNorm);
 
-  // ID 62 - Additional Data Field Template (with empty TXID for static)
-  const additionalData = formatTLV("05", "***");
+  // ID 62 - Additional Data Field Template
+  // ID 05 = Reference Label (TXID) - max 25 chars, alphanumeric only
+  const txid = identificador
+    ? identificador.replace(/[^a-zA-Z0-9]/g, "").substring(0, 25)
+    : "***";
+  const additionalData = formatTLV("05", txid);
   payload += formatTLV("62", additionalData);
 
   // ID 63 - CRC16 (Required, calculated over entire payload including "6304")

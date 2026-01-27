@@ -280,6 +280,11 @@ interface ContactInfo {
   email?: string | null;
 }
 
+interface PixInfo {
+  chave: string;
+  nomeBeneficiario: string;
+}
+
 interface ReciboPDFProps {
   recibo: {
     id: string;
@@ -302,6 +307,7 @@ interface ReciboPDFProps {
   };
   logoSrc?: string | null;
   qrCodeSrc?: string | null;
+  pixInfo?: PixInfo | null;
   contactInfo?: ContactInfo | null;
 }
 
@@ -328,7 +334,7 @@ function formatMonthYear(date: Date): string {
   return `${months[d.getMonth()]} de ${d.getFullYear()}`;
 }
 
-export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, contactInfo }: ReciboPDFProps) {
+export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, contactInfo }: ReciboPDFProps) {
   const items = [
     { description: "Honorarios Contabeis", value: Number(recibo.honorario) },
     { description: "13o Salario", value: Number(recibo.decimoTerceiro) },
@@ -427,24 +433,29 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, contactInfo }: R
           </View>
         </View>
 
-        {/* Payment Section with QR Code */}
-        {qrCodeSrc && (
+        {/* Payment Section with PIX Key */}
+        {pixInfo && (
           <View style={styles.paymentSection}>
-            <View style={styles.paymentInfo}>
+            <View style={{ flex: 1 }}>
               <Text style={styles.paymentTitle}>Pagamento via PIX</Text>
               <Text style={styles.paymentText}>
-                1. Escaneie o QR Code ao lado
+                1. Abra o app do seu banco
               </Text>
               <Text style={styles.paymentText}>
-                2. Digite o valor: {formatCurrency(Number(recibo.total))}
+                2. Escolha pagar com PIX usando a chave abaixo
               </Text>
               <Text style={styles.paymentText}>
-                3. Confirme o pagamento
+                3. Digite o valor: {formatCurrency(Number(recibo.total))}
               </Text>
-            </View>
-            <View style={styles.qrCodeContainer}>
-              <Image style={styles.qrCodeImage} src={qrCodeSrc} />
-              <Text style={styles.qrCodeLabel}>Escaneie para pagar</Text>
+              <Text style={styles.paymentText}>
+                4. Confirme o pagamento
+              </Text>
+              <View style={{ marginTop: 15, padding: 12, backgroundColor: "#f0f7ff", borderRadius: 6, borderWidth: 1, borderColor: "#00AEEF" }}>
+                <Text style={{ fontSize: 9, color: "#666", marginBottom: 4 }}>CHAVE PIX (CNPJ):</Text>
+                <Text style={{ fontSize: 14, fontFamily: "Helvetica-Bold", color: "#2E3192" }}>{pixInfo.chave}</Text>
+                <Text style={{ fontSize: 9, color: "#666", marginTop: 6 }}>BENEFICIARIO:</Text>
+                <Text style={{ fontSize: 11, color: "#333" }}>{pixInfo.nomeBeneficiario}</Text>
+              </View>
             </View>
           </View>
         )}

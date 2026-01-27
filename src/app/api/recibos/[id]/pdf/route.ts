@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import prisma from "@/lib/prisma";
 import ReciboPDF from "@/components/recibos/ReciboPDF";
-import { generatePixQRCode } from "@/lib/pix";
 import fs from "fs";
 import path from "path";
 
@@ -69,21 +68,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       total: Number(recibo.total),
     };
 
-    // Generate PIX QR Code if settings are configured
-    let qrCodeSrc: string | null = null;
-    if (settings?.pixKey && settings?.pixNomeBeneficiario && settings?.pixCidade) {
-      try {
-        qrCodeSrc = await generatePixQRCode({
-          pixKey: settings.pixKey,
-          pixKeyType: settings.pixKeyType || "random",
-          nomeBeneficiario: settings.pixNomeBeneficiario,
-          cidade: settings.pixCidade,
-          valor: reciboData.total,
-          identificador: recibo.id.slice(-8),
-        });
-      } catch (error) {
-        console.error("Error generating PIX QR Code:", error);
-      }
+    // Get PIX info if settings are configured
+    let pixInfo: { chave: string; nomeBeneficiario: string } | null = null;
+    if (settings?.pixKey && settings?.pixNomeBeneficiario) {
+      pixInfo = {
+        chave: settings.pixKey,
+        nomeBeneficiario: settings.pixNomeBeneficiario,
+      };
     }
 
     // Prepare contact info
@@ -99,7 +90,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       ReciboPDF({
         recibo: reciboData,
         logoSrc: logoBase64,
-        qrCodeSrc,
+        pixInfo,
         contactInfo,
       })
     );
