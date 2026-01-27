@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Cliente {
+  id          String   @id @default(cuid())
+  nome        String
+  cnpj        String   @unique
+  email       String?
+  responsavel String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  recibos     Recibo[]
+
+  @@map("clientes")
+}
+
+model Recibo {
+  id                 String   @id @default(cuid())
+  clienteId          String
+  cliente            Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  mesReferencia      DateTime
+  honorario          Decimal  @db.Decimal(10, 2)
+  decimoTerceiro     Decimal  @default(0) @db.Decimal(10, 2)
+  registro           Decimal  @default(0) @db.Decimal(10, 2)
+  alteracao          Decimal  @default(0) @db.Decimal(10, 2)
+  materialExpediente Decimal  @default(5.00) @db.Decimal(10, 2)
+  outros             Decimal  @default(0) @db.Decimal(10, 2)
+  detalhamento       String?
+  total              Decimal  @db.Decimal(10, 2)
+  status             String   @default("pendente")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([clienteId])
+  @@index([mesReferencia])
+  @@map("recibos")
+}
+
+model Settings {
+  id                  String   @id @default("default")
+
+  // PIX
+  pixKeyType          String?  // "cpf", "cnpj", "email", "phone", "random"
+  pixKey              String?
+  pixNomeBeneficiario String?
+  pixCidade           String?
+
+  // Contato
+  endereco            String?
+  telefone            String?
+  whatsapp            String?
+  email               String?
+
+  updatedAt           DateTime @updatedAt
+
+  @@map("settings")
+}
