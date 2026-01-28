@@ -69,21 +69,28 @@
       "output": "dist-electron"
     },
     "files": [
-      "electron/**/*",
-      ".next/standalone/**/*",
-      ".next/static/**/*",
-      "public/**/*",
-      "prisma/**/*",
-      ".env"
+      "electron/**/*"
     ],
     "extraResources": [
       {
+        "from": ".next/standalone",
+        "to": ".next/standalone"
+      },
+      {
         "from": ".next/static",
-        "to": ".next/static"
+        "to": ".next/standalone/.next/static"
+      },
+      {
+        "from": "public",
+        "to": ".next/standalone/public"
       },
       {
         "from": "public",
         "to": "public"
+      },
+      {
+        "from": "prisma",
+        "to": "prisma"
       }
     ],
     "win": {

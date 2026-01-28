@@ -5,8 +5,15 @@ const { spawn } = require("child_process");
 let mainWindow;
 let nextServer;
 
-const isDev = process.env.NODE_ENV === "development";
+const isDev = !app.isPackaged;
 const PORT = 3000;
+
+function getResourcePath(...paths) {
+  if (isDev) {
+    return path.join(__dirname, "..", ...paths);
+  }
+  return path.join(process.resourcesPath, ...paths);
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -14,7 +21,7 @@ function createWindow() {
     height: 900,
     minWidth: 1024,
     minHeight: 768,
-    icon: path.join(__dirname, "../public/logoJC.png"),
+    icon: getResourcePath("public", "logoJC.png"),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -54,12 +61,18 @@ function startNextServer() {
       return;
     }
 
-    const serverPath = path.join(__dirname, "../.next/standalone/server.js");
+    const serverPath = getResourcePath(".next", "standalone", "server.js");
+    const cwd = getResourcePath(".next", "standalone");
 
-    nextServer = spawn("node", [serverPath], {
-      cwd: path.join(__dirname, ".."),
+    console.log("Starting Next.js server from:", serverPath);
+    console.log("Working directory:", cwd);
+
+    // Use Electron as Node.js with ELECTRON_RUN_AS_NODE
+    nextServer = spawn(process.execPath, [serverPath], {
+      cwd: cwd,
       env: {
         ...process.env,
+        ELECTRON_RUN_AS_NODE: "1",
         PORT: PORT.toString(),
         NODE_ENV: "production",
       },
@@ -73,8 +86,12 @@ function startNextServer() {
       console.error(`Next.js Error: ${data}`);
     });
 
+    nextServer.on("error", (err) => {
+      console.error("Failed to start Next.js server:", err);
+    });
+
     // Give server time to start
-    setTimeout(resolve, 2000);
+    setTimeout(resolve, 3000);
   });
 }
 
