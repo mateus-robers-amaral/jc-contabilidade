@@ -89,6 +89,10 @@
         "to": "public"
       },
       {
+        "from": ".env",
+        "to": ".next/standalone/.env"
+      },
+      {
         "from": "prisma",
         "to": "prisma"
       }
