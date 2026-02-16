@@ -433,23 +433,39 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, contact
           </View>
         </View>
 
-        {/* Payment Section with PIX Key */}
+        {/* Payment Section with PIX QR Code */}
         {pixInfo && (
           <View style={styles.paymentSection}>
-            <View style={{ flex: 1 }}>
+            <View style={styles.paymentInfo}>
               <Text style={styles.paymentTitle}>Pagamento via PIX</Text>
-              <Text style={styles.paymentText}>
-                1. Abra o app do seu banco
-              </Text>
-              <Text style={styles.paymentText}>
-                2. Escolha pagar com PIX usando a chave abaixo
-              </Text>
-              <Text style={styles.paymentText}>
-                3. Digite o valor: {formatCurrency(Number(recibo.total))}
-              </Text>
-              <Text style={styles.paymentText}>
-                4. Confirme o pagamento
-              </Text>
+              {qrCodeSrc ? (
+                <>
+                  <Text style={styles.paymentText}>
+                    1. Abra o app do seu banco
+                  </Text>
+                  <Text style={styles.paymentText}>
+                    2. Escaneie o QR Code ao lado
+                  </Text>
+                  <Text style={styles.paymentText}>
+                    3. Confirme o pagamento de {formatCurrency(Number(recibo.total))}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.paymentText}>
+                    1. Abra o app do seu banco
+                  </Text>
+                  <Text style={styles.paymentText}>
+                    2. Escolha pagar com PIX usando a chave abaixo
+                  </Text>
+                  <Text style={styles.paymentText}>
+                    3. Digite o valor: {formatCurrency(Number(recibo.total))}
+                  </Text>
+                  <Text style={styles.paymentText}>
+                    4. Confirme o pagamento
+                  </Text>
+                </>
+              )}
               <View style={{ marginTop: 15, padding: 12, backgroundColor: "#f0f7ff", borderRadius: 6, borderWidth: 1, borderColor: "#00AEEF" }}>
                 <Text style={{ fontSize: 9, color: "#666", marginBottom: 4 }}>CHAVE PIX (CNPJ):</Text>
                 <Text style={{ fontSize: 14, fontFamily: "Helvetica-Bold", color: "#2E3192" }}>{pixInfo.chave}</Text>
@@ -457,6 +473,12 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, contact
                 <Text style={{ fontSize: 11, color: "#333" }}>{pixInfo.nomeBeneficiario}</Text>
               </View>
             </View>
+            {qrCodeSrc && (
+              <View style={styles.qrCodeContainer}>
+                <Image style={styles.qrCodeImage} src={qrCodeSrc} />
+                <Text style={styles.qrCodeLabel}>Escaneie para pagar</Text>
+              </View>
+            )}
           </View>
         )}
 

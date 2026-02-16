@@ -78,10 +78,7 @@ export function generatePixPayload(params: PixPayloadParams): string {
 
   // ID 01 - Point of Initiation Method
   // "11" = Static (reusable), "12" = Dynamic (one-time use)
-  // Use "12" when valor is defined (unique per transaction)
-  if (valor !== undefined && valor > 0) {
-    payload += formatTLV("01", "12");
-  }
+  payload += formatTLV("01", "11");
 
   // ID 26 - Merchant Account Information for PIX
   const merchantAccountInfo =

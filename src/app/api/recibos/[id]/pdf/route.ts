@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import prisma from "@/lib/prisma";
 import ReciboPDF from "@/components/recibos/ReciboPDF";
+import { generatePixQRCodeBuffer } from "@/lib/pix";
 import fs from "fs";
 import path from "path";
 
@@ -68,13 +69,28 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       total: Number(recibo.total),
     };
 
-    // Get PIX info if settings are configured
+    // Get PIX info and generate QR code if settings are configured
     let pixInfo: { chave: string; nomeBeneficiario: string } | null = null;
-    if (settings?.pixKey && settings?.pixNomeBeneficiario) {
+    let qrCodeBase64: string | null = null;
+    if (settings?.pixKey && settings?.pixNomeBeneficiario && settings?.pixCidade) {
       pixInfo = {
         chave: settings.pixKey,
         nomeBeneficiario: settings.pixNomeBeneficiario,
       };
+
+      try {
+        const qrBuffer = await generatePixQRCodeBuffer({
+          pixKey: settings.pixKey,
+          pixKeyType: settings.pixKeyType || "cnpj",
+          nomeBeneficiario: settings.pixNomeBeneficiario,
+          cidade: settings.pixCidade,
+          valor: Number(recibo.total),
+          identificador: recibo.id.slice(-25),
+        });
+        qrCodeBase64 = `data:image/png;base64,${qrBuffer.toString("base64")}`;
+      } catch (error) {
+        console.error("Error generating PIX QR Code:", error);
+      }
     }
 
     // Prepare contact info
@@ -90,6 +106,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       ReciboPDF({
         recibo: reciboData,
         logoSrc: logoBase64,
+        qrCodeSrc: qrCodeBase64,
         pixInfo,
         contactInfo,
       })
