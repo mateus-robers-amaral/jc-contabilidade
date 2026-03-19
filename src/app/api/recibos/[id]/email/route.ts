@@ -138,18 +138,30 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const filename = `recibo_${safeClienteName}_${monthYear}.pdf`;
 
     // Send email
+    const smtpHost = process.env.SMTP_HOST || "143.137.191.100";
+    const smtpPort = Number(process.env.SMTP_PORT || 587);
+    console.log(`[EMAIL] Conectando SMTP: ${smtpHost}:${smtpPort} user=${smtpUser}`);
+    console.log(`[EMAIL] Destinatario: ${recibo.cliente.email}`);
+    console.log(`[EMAIL] PDF gerado: ${pdfBuffer.length} bytes`);
+
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "143.137.191.100",
-      port: Number(process.env.SMTP_PORT || 587),
+      host: smtpHost,
+      port: smtpPort,
       secure: false,
       ignoreTLS: true,
       auth: {
         user: smtpUser,
         pass: smtpPass,
       },
-      connectionTimeout: 10000,
-      socketTimeout: 15000,
+      connectionTimeout: 15000,
+      socketTimeout: 20000,
+      logger: true,
+      debug: true,
     });
+
+    console.log("[EMAIL] Verificando conexao...");
+    await transporter.verify();
+    console.log("[EMAIL] Conexao OK, enviando...");
 
     await transporter.sendMail({
       from: `"J AMARAL CONTABIL" <${smtpUser}>`,
@@ -220,13 +232,16 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       ],
     });
 
+    console.log(`[EMAIL] Enviado com sucesso para ${recibo.cliente.email}`);
     return NextResponse.json({
       success: true,
       message: `Recibo enviado para ${recibo.cliente.email}`,
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Erro desconhecido";
-    console.error("Error sending email:", msg);
+    const stack = error instanceof Error ? error.stack : "";
+    console.error(`[EMAIL] ERRO: ${msg}`);
+    console.error(`[EMAIL] Stack: ${stack}`);
     return NextResponse.json(
       { success: false, error: `Erro ao enviar e-mail: ${msg}` },
       { status: 500 }
