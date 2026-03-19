@@ -5,6 +5,8 @@ import { Button, Input, Modal, Pagination } from "@/components/ui";
 import { formatCNPJ, parseCNPJ, getInitials } from "@/lib/utils";
 import type { Cliente, PaginatedResponse, ApiResponse } from "@/types";
 
+type DocType = "cnpj" | "cpf";
+
 interface CNPJData {
   razao_social: string;
   nome_fantasia: string;
@@ -19,6 +21,20 @@ function maskCNPJ(value: string): string {
   if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
   if (digits.length <= 12) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
   return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
+}
+
+function maskCPF(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
+
+function formatDoc(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length <= 11) return maskCPF(value);
+  return maskCNPJ(value);
 }
 
 export default function ClientesPage() {
@@ -44,6 +60,7 @@ export default function ClientesPage() {
   });
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
+  const [docType, setDocType] = useState<DocType>("cnpj");
   const [cnpjLoading, setCnpjLoading] = useState(false);
   const [cnpjStatus, setCnpjStatus] = useState<"idle" | "found" | "not_found" | "error">("idle");
   const lastFetchedCnpj = useRef("");
@@ -102,16 +119,23 @@ export default function ClientesPage() {
     }
   }, []);
 
-  const handleCNPJChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const masked = maskCNPJ(e.target.value);
+  const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const masked = docType === "cpf" ? maskCPF(e.target.value) : maskCNPJ(e.target.value);
     setFormData({ ...formData, cnpj: masked });
 
     const digits = masked.replace(/\D/g, "");
-    if (digits.length === 14 && !editingCliente) {
+    if (docType === "cnpj" && digits.length === 14 && !editingCliente) {
       fetchCNPJData(digits);
     } else {
       setCnpjStatus("idle");
     }
+  };
+
+  const handleDocTypeChange = (type: DocType) => {
+    setDocType(type);
+    setFormData((prev) => ({ ...prev, cnpj: "" }));
+    setCnpjStatus("idle");
+    lastFetchedCnpj.current = "";
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -123,6 +147,7 @@ export default function ClientesPage() {
   const openNewModal = () => {
     setEditingCliente(null);
     setFormData({ nome: "", cnpj: "", email: "", responsavel: "" });
+    setDocType("cnpj");
     setFormError("");
     setCnpjStatus("idle");
     lastFetchedCnpj.current = "";
@@ -131,15 +156,18 @@ export default function ClientesPage() {
 
   const openEditModal = (cliente: Cliente) => {
     setEditingCliente(cliente);
+    const digits = parseCNPJ(cliente.cnpj);
+    const type: DocType = digits.length <= 11 ? "cpf" : "cnpj";
+    setDocType(type);
     setFormData({
       nome: cliente.nome,
-      cnpj: formatCNPJ(cliente.cnpj),
+      cnpj: type === "cpf" ? maskCPF(digits) : formatCNPJ(digits),
       email: cliente.email || "",
       responsavel: cliente.responsavel || "",
     });
     setFormError("");
     setCnpjStatus("idle");
-    lastFetchedCnpj.current = parseCNPJ(cliente.cnpj);
+    lastFetchedCnpj.current = digits;
     setModalOpen(true);
   };
 
@@ -246,7 +274,7 @@ export default function ClientesPage() {
                   Empresa
                 </th>
                 <th className="px-6 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] w-2/5">
-                  CNPJ
+                  CPF/CNPJ
                 </th>
                 <th className="px-6 py-4 text-right text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] w-1/5">
                   Ações
@@ -301,7 +329,7 @@ export default function ClientesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-[13px] font-medium bg-[var(--bg-tertiary)] text-[var(--text-secondary)] font-mono">
-                        {formatCNPJ(cliente.cnpj)}
+                        {formatDoc(cliente.cnpj)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -351,13 +379,39 @@ export default function ClientesPage() {
         description="Preencha os dados do cliente"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* CNPJ first — auto-fills nome */}
+          {/* Doc type selector + input */}
           <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[var(--text-primary)] text-[15px] font-medium">Documento</span>
+              <div className="flex rounded-lg overflow-hidden border border-[var(--border-primary)] ml-auto">
+                <button
+                  type="button"
+                  onClick={() => handleDocTypeChange("cpf")}
+                  className={`px-3 py-1 text-[12px] font-semibold transition-colors ${
+                    docType === "cpf"
+                      ? "bg-[#00AEEF] text-white"
+                      : "bg-[var(--surface-primary)] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]"
+                  }`}
+                >
+                  CPF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDocTypeChange("cnpj")}
+                  className={`px-3 py-1 text-[12px] font-semibold transition-colors ${
+                    docType === "cnpj"
+                      ? "bg-[#00AEEF] text-white"
+                      : "bg-[var(--surface-primary)] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]"
+                  }`}
+                >
+                  CNPJ
+                </button>
+              </div>
+            </div>
             <Input
-              label="CNPJ"
-              placeholder="00.000.000/0000-00"
+              placeholder={docType === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"}
               value={formData.cnpj}
-              onChange={handleCNPJChange}
+              onChange={handleDocChange}
               required
             />
             {cnpjLoading && (
