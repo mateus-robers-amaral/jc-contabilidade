@@ -640,7 +640,7 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo }: Recib
             <View style={styles.footerCol}>
               <View style={styles.footerItem}>
                 <Text style={styles.footerLabel}>Cel: </Text>
-                <Text style={styles.footerValue}>(27) 99792-6300</Text>
+                <Text style={styles.footerValue}>(27) 99524-6812</Text>
               </View>
               <View style={styles.footerItem}>
                 <Text style={styles.footerLabel}>E-mail: </Text>

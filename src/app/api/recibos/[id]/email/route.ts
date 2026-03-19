@@ -186,7 +186,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
             <p style="font-size: 13px; color: #555; line-height: 1.5; margin: 0;">
               Em caso de duvidas, entre em contato pelo telefone (27) 3336-3213
-              ou WhatsApp (27) 99932-6612.
+              ou WhatsApp (27) 99524-6812.
             </p>
           </div>
 
