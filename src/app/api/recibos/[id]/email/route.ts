@@ -3,6 +3,8 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import nodemailer from "nodemailer";
 import prisma from "@/lib/prisma";
 import ReciboPDF from "@/components/recibos/ReciboPDF";
+
+export const maxDuration = 30;
 import { generatePixQRCode } from "@/lib/pix";
 import fs from "fs";
 import path from "path";
@@ -145,6 +147,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         user: smtpUser,
         pass: smtpPass,
       },
+      connectionTimeout: 10000,
+      socketTimeout: 15000,
     });
 
     await transporter.sendMail({
