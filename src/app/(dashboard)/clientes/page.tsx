@@ -139,14 +139,10 @@ export default function ClientesPage() {
     setFormData({ ...formData, cnpj: masked });
 
     const digits = masked.replace(/\D/g, "");
-    if (!editingCliente) {
-      if (docType === "cnpj" && digits.length === 14) {
-        fetchDocData(digits, "cnpj");
-      } else if (docType === "cpf" && digits.length === 11) {
-        fetchDocData(digits, "cpf");
-      } else {
-        setCnpjStatus("idle");
-      }
+    if (!editingCliente && docType === "cnpj" && digits.length === 14) {
+      fetchDocData(digits, "cnpj");
+    } else {
+      setCnpjStatus("idle");
     }
   };
 
