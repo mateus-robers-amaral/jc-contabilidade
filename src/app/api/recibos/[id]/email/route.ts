@@ -139,7 +139,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Send email
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.jamaralcontabil.com.br",
+      host: process.env.SMTP_HOST || "143.137.191.100",
       port: Number(process.env.SMTP_PORT || 587),
       secure: false,
       ignoreTLS: true,
