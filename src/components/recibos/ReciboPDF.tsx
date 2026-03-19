@@ -31,9 +31,9 @@ const styles = StyleSheet.create({
 
   // === CONTENT AREA ===
   content: {
-    paddingHorizontal: 44,
-    paddingTop: 28,
-    paddingBottom: 120,
+    paddingHorizontal: 40,
+    paddingTop: 20,
+    paddingBottom: 90,
   },
 
   // === HEADER ===
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 28,
+    marginBottom: 16,
   },
   headerLeft: {
     flexDirection: "row",
@@ -49,15 +49,15 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   logoImage: {
-    width: 52,
-    height: 52,
+    width: 44,
+    height: 44,
     objectFit: "contain",
   },
   companyInfo: {
     flexDirection: "column",
   },
   companyName: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: "Helvetica-Bold",
     color: BLUE,
     letterSpacing: 0.5,
@@ -94,20 +94,20 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: BORDER,
-    marginBottom: 22,
+    marginBottom: 14,
   },
 
   // === REFERENCE + CLIENT ROW ===
   infoRow: {
     flexDirection: "row",
-    gap: 16,
-    marginBottom: 24,
+    gap: 12,
+    marginBottom: 14,
   },
   referenceBox: {
-    width: 170,
+    width: 160,
     backgroundColor: BLUE,
     borderRadius: 6,
-    padding: 16,
+    padding: 12,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -128,20 +128,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: LIGHT_GRAY,
     borderRadius: 6,
-    padding: 16,
+    padding: 12,
   },
   clientLabel: {
     fontSize: 8,
     color: GRAY,
     textTransform: "uppercase",
     letterSpacing: 1,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   clientName: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: "Helvetica-Bold",
     color: DARK,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   clientDetail: {
     fontSize: 9,
@@ -156,20 +156,20 @@ const styles = StyleSheet.create({
     color: GRAY,
     textTransform: "uppercase",
     letterSpacing: 1,
-    marginBottom: 10,
+    marginBottom: 6,
   },
   table: {
     borderWidth: 1,
     borderColor: BORDER,
     borderRadius: 6,
     overflow: "hidden",
-    marginBottom: 24,
+    marginBottom: 14,
   },
   tableHeader: {
     flexDirection: "row",
     backgroundColor: LIGHT_GRAY,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
     borderBottomWidth: 1,
     borderBottomColor: BORDER,
   },
@@ -182,8 +182,8 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: "row",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
     borderBottomWidth: 1,
     borderBottomColor: BORDER,
   },
@@ -209,8 +209,8 @@ const styles = StyleSheet.create({
   totalBar: {
     flexDirection: "row",
     backgroundColor: CYAN,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
   },
   totalLabel: {
     flex: 3,
@@ -233,29 +233,29 @@ const styles = StyleSheet.create({
     borderColor: BORDER,
     borderRadius: 6,
     overflow: "hidden",
-    marginBottom: 24,
+    marginBottom: 10,
   },
   pixLeft: {
     flex: 1,
-    padding: 18,
+    padding: 12,
   },
   pixTitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: "Helvetica-Bold",
     color: BLUE,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   pixStep: {
-    fontSize: 9,
+    fontSize: 8,
     color: GRAY,
-    marginBottom: 4,
-    lineHeight: 1.4,
+    marginBottom: 3,
+    lineHeight: 1.3,
   },
   pixKeyBox: {
-    marginTop: 12,
+    marginTop: 8,
     backgroundColor: LIGHT_GRAY,
     borderRadius: 4,
-    padding: 10,
+    padding: 8,
   },
   pixKeyLabel: {
     fontSize: 7,
@@ -276,17 +276,17 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   pixRight: {
-    width: 155,
+    width: 140,
     backgroundColor: LIGHT_GRAY,
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
+    padding: 10,
     borderLeftWidth: 1,
     borderLeftColor: BORDER,
   },
   qrImage: {
-    width: 110,
-    height: 110,
+    width: 95,
+    height: 95,
   },
   qrLabel: {
     fontSize: 8,
@@ -308,8 +308,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderLeftWidth: 3,
     borderLeftColor: "#f59e0b",
-    padding: 14,
-    marginBottom: 24,
+    padding: 10,
+    marginBottom: 10,
   },
   detailsTitle: {
     fontSize: 9,
@@ -328,11 +328,11 @@ const styles = StyleSheet.create({
   // === SIGNATURE ===
   signatureArea: {
     alignItems: "center",
-    marginTop: 10,
-    marginBottom: 20,
+    marginTop: 6,
+    marginBottom: 0,
   },
   signatureLine: {
-    width: 260,
+    width: 240,
     borderTopWidth: 1,
     borderTopColor: DARK,
     marginBottom: 6,
@@ -356,14 +356,14 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 44,
-    paddingVertical: 14,
+    paddingHorizontal: 40,
+    paddingVertical: 10,
     backgroundColor: BLUE,
   },
   footerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   footerCol: {
     flexDirection: "column",
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   footerDivider: {
     height: 1,
     backgroundColor: "rgba(255,255,255,0.15)",
-    marginBottom: 6,
+    marginBottom: 4,
   },
   footerBottom: {
     flexDirection: "row",
