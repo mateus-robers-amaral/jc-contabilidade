@@ -92,41 +92,26 @@ export default function ClientesPage() {
     fetchClientes();
   }, [fetchClientes]);
 
-  // Auto-fetch document data
-  const fetchDocData = useCallback(async (digits: string, type: DocType) => {
-    if (digits === lastFetchedCnpj.current) return;
-    if (type === "cnpj" && digits.length !== 14) return;
-    if (type === "cpf" && digits.length !== 11) return;
-
+  // Auto-fetch CNPJ data only
+  const fetchCNPJData = useCallback(async (digits: string) => {
+    if (digits.length !== 14 || digits === lastFetchedCnpj.current) return;
     lastFetchedCnpj.current = digits;
     setCnpjLoading(true);
     setCnpjStatus("idle");
 
     try {
-      const url = type === "cpf"
-        ? `https://brasilapi.com.br/api/cpf/v1/${digits}`
-        : `https://brasilapi.com.br/api/cnpj/v1/${digits}`;
-
-      const res = await fetch(url);
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
       if (!res.ok) {
         setCnpjStatus("not_found");
         return;
       }
-      const data = await res.json();
+      const data: CNPJData = await res.json();
       setCnpjStatus("found");
-
-      if (type === "cpf") {
-        setFormData((prev) => ({
-          ...prev,
-          nome: data.nome || prev.nome,
-        }));
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          nome: data.razao_social || data.nome_fantasia || prev.nome,
-          email: data.email && data.email !== "" ? data.email : prev.email,
-        }));
-      }
+      setFormData((prev) => ({
+        ...prev,
+        nome: data.razao_social || data.nome_fantasia || prev.nome,
+        email: data.email && data.email !== "" ? data.email : prev.email,
+      }));
     } catch {
       setCnpjStatus("error");
     } finally {
@@ -140,7 +125,7 @@ export default function ClientesPage() {
 
     const digits = masked.replace(/\D/g, "");
     if (!editingCliente && docType === "cnpj" && digits.length === 14) {
-      fetchDocData(digits, "cnpj");
+      fetchCNPJData(digits);
     } else {
       setCnpjStatus("idle");
     }

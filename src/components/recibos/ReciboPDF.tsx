@@ -441,11 +441,14 @@ function formatCurrency(value: number): string {
   })}`;
 }
 
-function formatCNPJ(cnpj: string): string {
-  return cnpj.replace(
-    /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-    "$1.$2.$3/$4-$5"
-  );
+function formatDocument(doc: string): { label: string; formatted: string } {
+  const digits = doc.replace(/\D/g, "");
+  if (digits.length <= 11) {
+    const f = digits.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+    return { label: "CPF", formatted: f };
+  }
+  const f = digits.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+  return { label: "CNPJ", formatted: f };
 }
 
 function formatMonthYear(date: Date): string {
@@ -520,7 +523,7 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsap
               <Text style={styles.clientLabel}>Dados do Cliente</Text>
               <Text style={styles.clientName}>{recibo.cliente.nome}</Text>
               <Text style={styles.clientDetail}>
-                CNPJ: {formatCNPJ(recibo.cliente.cnpj)}
+                {formatDocument(recibo.cliente.cnpj).label}: {formatDocument(recibo.cliente.cnpj).formatted}
               </Text>
               {recibo.cliente.responsavel && (
                 <Text style={styles.clientDetail}>
