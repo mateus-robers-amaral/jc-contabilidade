@@ -137,9 +137,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Send email
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "mail.jamaralcontabil.com.br",
+      host: process.env.SMTP_HOST || "smtp.jamaralcontabil.com.br",
       port: Number(process.env.SMTP_PORT || 587),
-      secure: process.env.SMTP_SECURE === "true",
+      secure: false,
+      ignoreTLS: true,
       auth: {
         user: smtpUser,
         pass: smtpPass,
