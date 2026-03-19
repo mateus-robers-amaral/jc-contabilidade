@@ -10,15 +10,12 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-// Read logo and convert to base64 data URL
-function getLogoBase64(): string | null {
+function getImageBase64(filename: string): string | null {
   try {
-    const logoPath = path.join(process.cwd(), "public", "logoJC.png");
-    const logoBuffer = fs.readFileSync(logoPath);
-    const base64 = logoBuffer.toString("base64");
-    return `data:image/png;base64,${base64}`;
-  } catch (error) {
-    console.error("Error reading logo:", error);
+    const filePath = path.join(process.cwd(), "public", filename);
+    const buffer = fs.readFileSync(filePath);
+    return `data:image/png;base64,${buffer.toString("base64")}`;
+  } catch {
     return null;
   }
 }
@@ -54,8 +51,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Get logo as base64
-    const logoBase64 = getLogoBase64();
+    // Get images as base64
+    const logoBase64 = getImageBase64("logoJC.png");
+    const whatsappIcon = getImageBase64("whatsapp-icon.png");
 
     // Convert Decimal fields to numbers for the PDF component
     const reciboData = {
@@ -100,6 +98,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         logoSrc: logoBase64,
         qrCodeSrc: qrCodeBase64,
         pixInfo,
+        whatsappIconSrc: whatsappIcon,
       })
     );
 

@@ -431,6 +431,7 @@ interface ReciboPDFProps {
   logoSrc?: string | null;
   qrCodeSrc?: string | null;
   pixInfo?: PixInfo | null;
+  whatsappIconSrc?: string | null;
 }
 
 function formatCurrency(value: number): string {
@@ -467,7 +468,7 @@ function pixKeyTypeLabel(type: string): string {
   return labels[type] || type.toUpperCase();
 }
 
-export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo }: ReciboPDFProps) {
+export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsappIconSrc }: ReciboPDFProps) {
   const items = [
     { description: "Honorarios Contabeis", value: Number(recibo.honorario) },
     { description: "13o Salario", value: Number(recibo.decimoTerceiro) },
@@ -639,7 +640,7 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo }: Recib
             </View>
             <View style={styles.footerCol}>
               <View style={styles.footerItem}>
-                <Text style={styles.footerLabel}>Cel: </Text>
+                {whatsappIconSrc && <Image src={whatsappIconSrc} style={{ width: 10, height: 10 }} />}
                 <Text style={styles.footerValue}>(27) 99524-6812</Text>
               </View>
               <View style={styles.footerItem}>

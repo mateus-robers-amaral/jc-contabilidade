@@ -11,11 +11,11 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-function getLogoBase64(): string | null {
+function getImageBase64(filename: string): string | null {
   try {
-    const logoPath = path.join(process.cwd(), "public", "logoJC.png");
-    const logoBuffer = fs.readFileSync(logoPath);
-    return `data:image/png;base64,${logoBuffer.toString("base64")}`;
+    const filePath = path.join(process.cwd(), "public", filename);
+    const buffer = fs.readFileSync(filePath);
+    return `data:image/png;base64,${buffer.toString("base64")}`;
   } catch {
     return null;
   }
@@ -69,7 +69,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Generate PDF
-    const logoBase64 = getLogoBase64();
+    const logoBase64 = getImageBase64("logoJC.png");
+    const whatsappIcon = getImageBase64("whatsapp-icon.png");
     const reciboData = {
       ...recibo,
       honorario: Number(recibo.honorario),
@@ -109,6 +110,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         logoSrc: logoBase64,
         qrCodeSrc: qrCodeBase64,
         pixInfo,
+        whatsappIconSrc: whatsappIcon,
       })
     );
 
