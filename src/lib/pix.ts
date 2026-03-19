@@ -53,6 +53,29 @@ function normalizeString(str: string, maxLength: number): string {
 }
 
 /**
+ * Cleans PIX key based on its type.
+ * CPF/CNPJ: only digits
+ * Phone: +55 + digits
+ * Email/Random: as-is
+ */
+function cleanPixKey(key: string, type: string): string {
+  const digits = key.replace(/\D/g, "");
+
+  switch (type) {
+    case "cpf":
+      return digits.slice(0, 11);
+    case "cnpj":
+      return digits.slice(0, 14);
+    case "phone": {
+      const clean = digits.startsWith("55") ? digits : `55${digits}`;
+      return `+${clean}`;
+    }
+    default:
+      return key.trim();
+  }
+}
+
+/**
  * Generates a STATIC PIX EMV/BRCode payload string
  * This creates a simple QR code that directs to the PIX key
  * The payer will enter the amount manually in their banking app
@@ -60,11 +83,15 @@ function normalizeString(str: string, maxLength: number): string {
 export function generatePixPayload(params: PixPayloadParams): string {
   const {
     pixKey,
+    pixKeyType,
     nomeBeneficiario,
     cidade,
     valor,
     identificador,
   } = params;
+
+  // Clean the PIX key based on type (remove formatting)
+  const chave = cleanPixKey(pixKey, pixKeyType);
 
   // Normalize strings according to PIX specification
   const nome = normalizeString(nomeBeneficiario, 25);
@@ -78,12 +105,12 @@ export function generatePixPayload(params: PixPayloadParams): string {
 
   // ID 01 - Point of Initiation Method
   // "11" = Static (reusable), "12" = Dynamic (one-time use)
-  payload += formatTLV("01", "11");
+  payload += formatTLV("01", "12");
 
   // ID 26 - Merchant Account Information for PIX
   const merchantAccountInfo =
     formatTLV("00", "BR.GOV.BCB.PIX") + // GUI
-    formatTLV("01", pixKey); // Chave PIX
+    formatTLV("01", chave); // Chave PIX (limpa)
   payload += formatTLV("26", merchantAccountInfo);
 
   // ID 52 - Merchant Category Code (Required, "0000" for general)
@@ -108,7 +135,7 @@ export function generatePixPayload(params: PixPayloadParams): string {
   payload += formatTLV("60", cidadeNorm);
 
   // ID 62 - Additional Data Field Template
-  // ID 05 = Reference Label (TXID) - max 25 chars, alphanumeric only
+  // ID 05 = Reference Label (TXID) - "***" = banco gera automaticamente
   const txid = identificador
     ? identificador.replace(/[^a-zA-Z0-9]/g, "").substring(0, 25)
     : "***";
