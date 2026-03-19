@@ -221,9 +221,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       message: `Recibo enviado para ${recibo.cliente.email}`,
     });
   } catch (error) {
-    console.error("Error sending email:", error);
+    const msg = error instanceof Error ? error.message : "Erro desconhecido";
+    console.error("Error sending email:", msg);
     return NextResponse.json(
-      { success: false, error: "Erro ao enviar e-mail" },
+      { success: false, error: `Erro ao enviar e-mail: ${msg}` },
       { status: 500 }
     );
   }

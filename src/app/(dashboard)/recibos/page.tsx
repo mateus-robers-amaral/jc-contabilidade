@@ -218,11 +218,12 @@ export default function RecibosPage() {
   };
 
   const handleSendEmail = async () => {
-    if (!emailModal) return;
-    setSendingEmail(emailModal.id);
+    if (!emailModal || sendingEmail) return;
+    const reciboId = emailModal.id;
+    setSendingEmail(reciboId);
     setEmailError("");
     try {
-      const res = await fetch(`/api/recibos/${emailModal.id}/email`, {
+      const res = await fetch(`/api/recibos/${reciboId}/email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ assunto: emailAssunto, mensagem: emailMensagem }),
@@ -230,7 +231,7 @@ export default function RecibosPage() {
       const data: ApiResponse = await res.json();
       if (data.success) {
         setEmailModal(null);
-        setEmailSuccess(emailModal.id);
+        setEmailSuccess(reciboId);
         setTimeout(() => setEmailSuccess(null), 4000);
       } else {
         setEmailError(data.error || "Erro ao enviar e-mail");
