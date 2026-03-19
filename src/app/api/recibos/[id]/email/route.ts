@@ -24,6 +24,9 @@ function getImageBase64(filename: string): string | null {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const body = await request.json().catch(() => ({}));
+    const customMessage: string | undefined = body.mensagem;
+    const customSubject: string | undefined = body.assunto;
 
     // Fetch recibo and settings
     const [recibo, settings] = await Promise.all([
@@ -146,7 +149,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     await transporter.sendMail({
       from: `"J AMARAL CONTABIL" <${smtpUser}>`,
       to: recibo.cliente.email,
-      subject: `Recibo de Honorarios - ${mesAno} | J AMARAL CONTABIL`,
+      subject: customSubject || `Recibo de Honorarios - ${mesAno} | J AMARAL CONTABIL`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
           <div style="background: #2E3192; padding: 24px; border-radius: 12px 12px 0 0;">
@@ -159,9 +162,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
               Prezado(a) <strong>${recibo.cliente.responsavel || clienteName}</strong>,
             </p>
 
-            <p style="font-size: 14px; color: #555; line-height: 1.6; margin: 0 0 20px;">
-              Segue em anexo o recibo de honorarios contabeis referente a
-              <strong>${mesAno}</strong>, no valor de <strong>${valor}</strong>.
+            <p style="font-size: 14px; color: #555; line-height: 1.6; margin: 0 0 20px; white-space: pre-line;">
+              ${customMessage || `Segue em anexo o recibo de honorarios contabeis referente a ${mesAno}, no valor de ${valor}.`}
             </p>
 
             <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 0 0 20px;">

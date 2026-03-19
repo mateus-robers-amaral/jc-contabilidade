@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { Button, SearchableSelect, Drawer, CurrencyInput, Pagination } from "@/components/ui";
+import { Button, SearchableSelect, Drawer, CurrencyInput, Pagination, Modal } from "@/components/ui";
 import { formatCurrency, formatMonthYear, getInitials, calculateTotal } from "@/lib/utils";
 import type { Cliente, Recibo, PaginatedResponse, ApiResponse } from "@/types";
 
@@ -194,25 +194,49 @@ export default function RecibosPage() {
 
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
+  const [emailModal, setEmailModal] = useState<Recibo | null>(null);
+  const [emailAssunto, setEmailAssunto] = useState("");
+  const [emailMensagem, setEmailMensagem] = useState("");
+  const [emailError, setEmailError] = useState("");
 
-  const handleSendEmail = async (recibo: Recibo) => {
+  const openEmailModal = (recibo: Recibo) => {
     if (!recibo.cliente?.email) {
-      setFormError("Cliente nao possui e-mail cadastrado");
+      alert("Cliente nao possui e-mail cadastrado");
       return;
     }
-    setSendingEmail(recibo.id);
-    setEmailSuccess(null);
+    const mesRef = new Date(recibo.mesReferencia);
+    const meses = ["Janeiro","Fevereiro","Marco","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const mesAno = `${meses[mesRef.getMonth()]}/${mesRef.getFullYear()}`;
+    const valor = formatCurrency(Number(recibo.total));
+
+    setEmailAssunto(`Recibo de Honorarios - ${mesAno} | J AMARAL CONTABIL`);
+    setEmailMensagem(
+      `Segue em anexo o recibo de honorarios contabeis referente a ${mesAno}, no valor de ${valor}.`
+    );
+    setEmailError("");
+    setEmailModal(recibo);
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailModal) return;
+    setSendingEmail(emailModal.id);
+    setEmailError("");
     try {
-      const res = await fetch(`/api/recibos/${recibo.id}/email`, { method: "POST" });
+      const res = await fetch(`/api/recibos/${emailModal.id}/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assunto: emailAssunto, mensagem: emailMensagem }),
+      });
       const data: ApiResponse = await res.json();
       if (data.success) {
-        setEmailSuccess(recibo.id);
+        setEmailModal(null);
+        setEmailSuccess(emailModal.id);
         setTimeout(() => setEmailSuccess(null), 4000);
       } else {
-        alert(data.error || "Erro ao enviar e-mail");
+        setEmailError(data.error || "Erro ao enviar e-mail");
       }
     } catch {
-      alert("Erro ao conectar com o servidor");
+      setEmailError("Erro ao conectar com o servidor");
     } finally {
       setSendingEmail(null);
     }
@@ -392,8 +416,7 @@ export default function RecibosPage() {
                           </span>
                         </a>
                         <button
-                          onClick={() => handleSendEmail(recibo)}
-                          disabled={sendingEmail === recibo.id}
+                          onClick={() => openEmailModal(recibo)}
                           className={`size-9 rounded-full flex items-center justify-center transition-all ${
                             emailSuccess === recibo.id
                               ? "text-[#34C759] bg-[rgba(52,199,89,0.1)]"
@@ -401,8 +424,8 @@ export default function RecibosPage() {
                           }`}
                           title={recibo.cliente?.email ? `Enviar para ${recibo.cliente.email}` : "Cliente sem e-mail"}
                         >
-                          <span className={`material-symbols-outlined text-[20px] ${sendingEmail === recibo.id ? "animate-spin" : ""}`}>
-                            {sendingEmail === recibo.id ? "progress_activity" : emailSuccess === recibo.id ? "check_circle" : "mail"}
+                          <span className="material-symbols-outlined text-[20px]">
+                            {emailSuccess === recibo.id ? "check_circle" : "mail"}
                           </span>
                         </button>
                         <button
@@ -609,6 +632,65 @@ export default function RecibosPage() {
           </div>
         </div>
       )}
+      {/* Email Modal */}
+      <Modal
+        isOpen={!!emailModal}
+        onClose={() => setEmailModal(null)}
+        title="Enviar Recibo por E-mail"
+        description={emailModal?.cliente?.email ? `Para: ${emailModal.cliente.email}` : ""}
+      >
+        <div className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <label className="text-[var(--text-primary)] text-[15px] font-medium">Assunto</label>
+            <input
+              type="text"
+              value={emailAssunto}
+              onChange={(e) => setEmailAssunto(e.target.value)}
+              className="w-full rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] border border-[var(--border-primary)] bg-[var(--surface-primary)] focus:border-[#00AEEF] h-[48px] px-4 text-[14px] transition-all"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[var(--text-primary)] text-[15px] font-medium">Mensagem</label>
+            <textarea
+              value={emailMensagem}
+              onChange={(e) => setEmailMensagem(e.target.value)}
+              rows={5}
+              className="w-full rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] border border-[var(--border-primary)] bg-[var(--surface-primary)] focus:border-[#00AEEF] p-4 text-[14px] transition-all resize-none"
+            />
+            <p className="text-[var(--text-tertiary)] text-[12px]">
+              O PDF do recibo sera anexado automaticamente ao e-mail.
+            </p>
+          </div>
+
+          {emailError && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[rgba(255,59,48,0.1)] border border-[rgba(255,59,48,0.2)] text-[#FF3B30] text-[14px]">
+              <span className="material-symbols-outlined text-[20px]">error</span>
+              {emailError}
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              onClick={() => setEmailModal(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              className="flex-1"
+              loading={!!sendingEmail}
+              icon={sendingEmail ? undefined : "send"}
+              onClick={handleSendEmail}
+            >
+              {sendingEmail ? "Enviando..." : "Enviar E-mail"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
