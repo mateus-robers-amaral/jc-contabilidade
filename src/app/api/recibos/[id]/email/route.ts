@@ -134,10 +134,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Send email
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp-mail.outlook.com",
+      port: 587,
+      secure: false,
       auth: {
         user: smtpUser,
         pass: smtpPass,
+      },
+      tls: {
+        ciphers: "SSLv3",
       },
     });
 
