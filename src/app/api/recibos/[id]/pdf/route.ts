@@ -70,12 +70,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     };
 
     // Get PIX info and generate QR code if settings are configured
-    let pixInfo: { chave: string; nomeBeneficiario: string } | null = null;
+    let pixInfo: { chave: string; nomeBeneficiario: string; tipo: string } | null = null;
     let qrCodeBase64: string | null = null;
     if (settings?.pixKey && settings?.pixNomeBeneficiario && settings?.pixCidade) {
       pixInfo = {
         chave: settings.pixKey,
         nomeBeneficiario: settings.pixNomeBeneficiario,
+        tipo: settings.pixKeyType || "cnpj",
       };
 
       try {

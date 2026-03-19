@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "prisma db push && next start",
+    "start": "prisma db push && npx tsx prisma/seed.ts && next start",
     "lint": "eslint",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
@@ -37,6 +37,7 @@
     "react-dom": "19.2.1",
     "react-hook-form": "^7.68.0",
     "ws": "^8.18.3",
+    "tsx": "^4.21.0",
     "zod": "^4.2.0"
   },
   "devDependencies": {
@@ -49,7 +50,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
     "tailwindcss": "^4",
-    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
