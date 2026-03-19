@@ -122,7 +122,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Format month/year
     const mesRef = new Date(recibo.mesReferencia);
     const meses = [
-      "Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho",
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
       "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
     ];
     const mesAno = `${meses[mesRef.getMonth()]}/${mesRef.getFullYear()}`;
@@ -154,12 +154,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     await transporter.sendMail({
       from: `"J AMARAL CONTABIL" <${smtpUser}>`,
       to: recibo.cliente.email,
-      subject: customSubject || `Recibo de Honorarios - ${mesAno} | J AMARAL CONTABIL`,
+      subject: customSubject || `Recibo de Honorários - ${mesAno} | J AMARAL CONTABIL`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
           <div style="background: #2E3192; padding: 24px; border-radius: 12px 12px 0 0;">
             <h1 style="color: #fff; margin: 0; font-size: 20px;">J AMARAL CONTABIL</h1>
-            <p style="color: rgba(255,255,255,0.7); margin: 4px 0 0; font-size: 13px;">Gestao Fiscal e Contabil</p>
+            <p style="color: rgba(255,255,255,0.7); margin: 4px 0 0; font-size: 13px;">Gestão Fiscal e Contábil</p>
           </div>
 
           <div style="background: #f9fafb; padding: 28px; border: 1px solid #e5e7eb; border-top: none;">
@@ -168,7 +168,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             </p>
 
             <p style="font-size: 14px; color: #555; line-height: 1.6; margin: 0 0 20px; white-space: pre-line;">
-              ${customMessage || `Segue em anexo o recibo de honorarios contabeis referente a ${mesAno}, no valor de ${valor}.`}
+              ${customMessage || `Segue em anexo o recibo de honorários contábeis referente a ${mesAno}, no valor de ${valor}.`}
             </p>
 
             <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 0 0 20px;">
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
                   <td style="text-align: right; font-weight: 600;">${clienteName}</td>
                 </tr>
                 <tr>
-                  <td style="color: #888; padding: 4px 0;">Referencia:</td>
+                  <td style="color: #888; padding: 4px 0;">Referência:</td>
                   <td style="text-align: right; font-weight: 600;">${mesAno}</td>
                 </tr>
                 <tr>
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             ` : ""}
 
             <p style="font-size: 13px; color: #555; line-height: 1.5; margin: 0;">
-              Em caso de duvidas, entre em contato pelo telefone (27) 3336-3213
+              Em caso de dúvidas, entre em contato pelo telefone (27) 3336-3213
               ou WhatsApp (27) 99524-6812.
             </p>
           </div>
@@ -206,7 +206,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
               Jean Claude Rezende do Amaral - Contador - CRC-ES 008870/O-5
             </p>
             <p style="color: rgba(255,255,255,0.5); font-size: 10px; margin: 4px 0 0;">
-              Rua Adley, 108, Morada de Santa Fe, Cariacica/ES - CEP 29.143-719
+              Rua Adley, 108, Morada de Santa Fé, Cariacica/ES - CEP 29.143-719
             </p>
           </div>
         </div>

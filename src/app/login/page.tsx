@@ -70,7 +70,7 @@ export default function LoginPage() {
             J AMARAL CONTABIL
           </h1>
           <p className="text-[var(--text-tertiary)] text-[15px] mt-1">
-            Sistema de Gestao Fiscal
+            Sistema de Gestão Fiscal
           </p>
         </div>
 

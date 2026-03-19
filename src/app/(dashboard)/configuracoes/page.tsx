@@ -13,7 +13,7 @@ const pixKeyTypeOptions = [
   { value: "random", label: "Chave Aleatoria" },
 ];
 
-export default function ConfiguracoesPage() {
+export default function ConfiguraçõesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -74,7 +74,7 @@ export default function ConfiguracoesPage() {
       const data: ApiResponse = await res.json();
 
       if (!data.success) {
-        setError(data.error || "Erro ao salvar configuracoes");
+        setError(data.error || "Erro ao salvar configurações");
         return;
       }
 
@@ -102,10 +102,10 @@ export default function ConfiguracoesPage() {
       {/* Page Header */}
       <div className="flex flex-col gap-1">
         <h1 className="text-[var(--text-primary)] text-[28px] font-bold tracking-tight">
-          Configuracoes
+          Configurações
         </h1>
         <p className="text-[var(--text-tertiary)] text-[15px]">
-          Gerencie as configuracoes do sistema e informacoes da empresa
+          Gerencie as configurações do sistema e informações da empresa
         </p>
       </div>
 
@@ -123,7 +123,7 @@ export default function ConfiguracoesPage() {
                 PIX
               </h2>
               <p className="text-[var(--text-tertiary)] text-[13px]">
-                Configuracoes para geracao de QR Code PIX nos recibos
+                Configurações para geração de QR Code PIX nos recibos
               </p>
             </div>
           </div>
@@ -152,23 +152,23 @@ export default function ConfiguracoesPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Nome do Beneficiario"
+                label="Nome do Beneficiário"
                 placeholder="Ex: J AMARAL CONTABIL"
                 value={formData.pixNomeBeneficiario}
                 onChange={(e) =>
                   setFormData({ ...formData, pixNomeBeneficiario: e.target.value })
                 }
-                hint="Nome que aparecera no QR Code (max 25 caracteres)"
+                hint="Nome que aparecerá no QR Code (max 25 caracteres)"
               />
 
               <Input
                 label="Cidade"
-                placeholder="Ex: Sao Paulo"
+                placeholder="Ex: São Paulo"
                 value={formData.pixCidade}
                 onChange={(e) =>
                   setFormData({ ...formData, pixCidade: e.target.value })
                 }
-                hint="Cidade do beneficiario (max 15 caracteres)"
+                hint="Cidade do beneficiário (max 15 caracteres)"
               />
             </div>
           </div>
@@ -184,18 +184,18 @@ export default function ConfiguracoesPage() {
             </div>
             <div>
               <h2 className="text-[var(--text-primary)] text-[18px] font-semibold">
-                Informacoes de Contato
+                Informações de Contato
               </h2>
               <p className="text-[var(--text-tertiary)] text-[13px]">
-                Dados que serao exibidos no rodape dos recibos PDF
+                Dados que serão exibidos no rodape dos recibos PDF
               </p>
             </div>
           </div>
 
           <div className="grid gap-4">
             <Input
-              label="Endereco"
-              placeholder="Ex: Rua das Flores, 123 - Centro - Sao Paulo/SP"
+              label="Endereço"
+              placeholder="Ex: Rua das Flores, 123 - Centro - São Paulo/SP"
               value={formData.endereco}
               onChange={(e) =>
                 setFormData({ ...formData, endereco: e.target.value })
@@ -251,14 +251,14 @@ export default function ConfiguracoesPage() {
             <span className="material-symbols-outlined text-[20px]">
               check_circle
             </span>
-            Configuracoes salvas com sucesso!
+            Configurações salvas com sucesso!
           </div>
         )}
 
         {/* Submit Button */}
         <div className="flex justify-end">
           <Button type="submit" loading={saving} icon={saving ? undefined : "save"}>
-            {saving ? "Salvando..." : "Salvar Configuracoes"}
+            {saving ? "Salvando..." : "Salvar Configurações"}
           </Button>
         </div>
       </form>

@@ -3,7 +3,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "J AMARAL CONTABIL - Sistema de Gestao Fiscal",
+  title: "J AMARAL CONTABIL - Sistema de Gestão Fiscal",
   description: "Sistema para gerenciamento de recibos fiscais",
 };
 

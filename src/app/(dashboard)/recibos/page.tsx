@@ -137,7 +137,7 @@ export default function RecibosPage() {
         return;
       }
       if (!formData.honorario || formData.honorario <= 0) {
-        setFormError("Informe o valor dos honorarios");
+        setFormError("Informe o valor dos honorários");
         return;
       }
 
@@ -205,13 +205,13 @@ export default function RecibosPage() {
       return;
     }
     const mesRef = new Date(recibo.mesReferencia);
-    const meses = ["Janeiro","Fevereiro","Marco","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
     const mesAno = `${meses[mesRef.getMonth()]}/${mesRef.getFullYear()}`;
     const valor = formatCurrency(Number(recibo.total));
 
-    setEmailAssunto(`Recibo de Honorarios - ${mesAno} | J AMARAL CONTABIL`);
+    setEmailAssunto(`Recibo de Honorários - ${mesAno} | J AMARAL CONTABIL`);
     setEmailMensagem(
-      `Segue em anexo o recibo de honorarios contabeis referente a ${mesAno}, no valor de ${valor}.`
+      `Segue em anexo o recibo de honorários contábeis referente a ${mesAno}, no valor de ${valor}.`
     );
     setEmailError("");
     setEmailModal(recibo);
@@ -313,13 +313,13 @@ export default function RecibosPage() {
                   Valor
                 </th>
                 <th className="px-6 py-4 text-[var(--text-tertiary)] text-[12px] uppercase font-semibold tracking-wider w-[15%]">
-                  Referencia
+                  Referência
                 </th>
                 <th className="px-6 py-4 text-[var(--text-tertiary)] text-[12px] uppercase font-semibold tracking-wider w-[15%]">
                   Status
                 </th>
                 <th className="px-6 py-4 text-[var(--text-tertiary)] text-[12px] uppercase font-semibold tracking-wider w-[20%] text-right">
-                  Acoes
+                  Ações
                 </th>
               </tr>
             </thead>
@@ -516,7 +516,7 @@ export default function RecibosPage() {
             </div>
             <div>
               <label className="flex flex-col gap-2">
-                <span className="text-[var(--text-primary)] text-[15px] font-medium">Mes de Referencia</span>
+                <span className="text-[var(--text-primary)] text-[15px] font-medium">Mês de Referência</span>
                 <input
                   type="month"
                   value={formData.mesReferencia}
@@ -539,13 +539,13 @@ export default function RecibosPage() {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <CurrencyInput
-                label="Honorarios"
+                label="Honorários"
                 value={formData.honorario}
                 onChange={(value) => setFormData({ ...formData, honorario: value })}
                 required
               />
               <CurrencyInput
-                label="13o Salario"
+                label="13o Salário"
                 value={formData.decimoTerceiro}
                 onChange={(value) =>
                   setFormData({ ...formData, decimoTerceiro: value })
@@ -557,7 +557,7 @@ export default function RecibosPage() {
                 onChange={(value) => setFormData({ ...formData, registro: value })}
               />
               <CurrencyInput
-                label="Alteracao Contratual"
+                label="Alteração Contratual"
                 value={formData.alteracao}
                 onChange={(value) => setFormData({ ...formData, alteracao: value })}
               />
@@ -585,7 +585,7 @@ export default function RecibosPage() {
                   setFormData({ ...formData, detalhamento: e.target.value })
                 }
                 className="flex w-full rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] border border-[var(--border-primary)] bg-[var(--surface-primary)] focus:border-[#00AEEF] min-h-[100px] p-4 text-[16px] font-normal transition-all resize-none"
-                placeholder="Adicione observacoes sobre os valores cobrados..."
+                placeholder="Adicione observações sobre os valores cobrados..."
               />
             </label>
           </div>
@@ -615,7 +615,7 @@ export default function RecibosPage() {
             onClick={() => setDeleteConfirm(null)}
           />
           <div className="relative w-full max-w-md bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-3xl shadow-2xl p-6 animate-fadeIn">
-            <h3 className="text-[var(--text-primary)] text-[20px] font-bold mb-2">Confirmar Exclusao</h3>
+            <h3 className="text-[var(--text-primary)] text-[20px] font-bold mb-2">Confirmar Exclusão</h3>
             <p className="text-[var(--text-tertiary)] text-[15px] mb-5">
               Tem certeza que deseja excluir este recibo?
             </p>

@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     fontFamily: "Helvetica-Bold",
     color: BLUE,
   },
-  pixBeneficiario: {
+  pixBeneficiário: {
     fontSize: 9,
     color: GRAY,
     marginTop: 6,
@@ -450,7 +450,7 @@ function formatCNPJ(cnpj: string): string {
 
 function formatMonthYear(date: Date): string {
   const months = [
-    "Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho",
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
   ];
   const d = new Date(date);
@@ -463,17 +463,17 @@ function pixKeyTypeLabel(type: string): string {
     cnpj: "CNPJ",
     email: "E-MAIL",
     phone: "TELEFONE",
-    random: "CHAVE ALEATORIA",
+    random: "CHAVE ALEATÓRIA",
   };
   return labels[type] || type.toUpperCase();
 }
 
 export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsappIconSrc }: ReciboPDFProps) {
   const items = [
-    { description: "Honorarios Contabeis", value: Number(recibo.honorario) },
-    { description: "13o Salario", value: Number(recibo.decimoTerceiro) },
+    { description: "Honorários Contábeis", value: Number(recibo.honorario) },
+    { description: "13º Salário", value: Number(recibo.decimoTerceiro) },
     { description: "Taxa de Registro", value: Number(recibo.registro) },
-    { description: "Alteracao Contratual", value: Number(recibo.alteracao) },
+    { description: "Alteração Contratual", value: Number(recibo.alteracao) },
     { description: "Material de Expediente", value: Number(recibo.materialExpediente) },
     { description: "Outros Servicos", value: Number(recibo.outros) },
   ].filter((item) => item.value > 0);
@@ -491,7 +491,7 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsap
               {logoSrc && <Image style={styles.logoImage} src={logoSrc} />}
               <View style={styles.companyInfo}>
                 <Text style={styles.companyName}>J AMARAL CONTABIL</Text>
-                <Text style={styles.companySubtitle}>Gestao Fiscal e Contabil</Text>
+                <Text style={styles.companySubtitle}>Gestão Fiscal e Contábil</Text>
               </View>
             </View>
             <View style={styles.headerRight}>
@@ -524,7 +524,7 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsap
               </Text>
               {recibo.cliente.responsavel && (
                 <Text style={styles.clientDetail}>
-                  Responsavel: {recibo.cliente.responsavel}
+                  Responsável: {recibo.cliente.responsavel}
                 </Text>
               )}
               {recibo.cliente.email && (
@@ -536,10 +536,10 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsap
           </View>
 
           {/* Services Table */}
-          <Text style={styles.sectionLabel}>Discriminacao dos Servicos</Text>
+          <Text style={styles.sectionLabel}>Discriminação dos Serviços</Text>
           <View style={styles.table}>
             <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderText, styles.descCol]}>Descricao</Text>
+              <Text style={[styles.tableHeaderText, styles.descCol]}>Descrição</Text>
               <Text style={[styles.tableHeaderText, styles.valCol]}>Valor</Text>
             </View>
             {items.map((item, index) => (
@@ -592,8 +592,8 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsap
                     Chave PIX ({pixKeyTypeLabel(pixInfo.tipo)})
                   </Text>
                   <Text style={styles.pixKeyValue}>{pixInfo.chave}</Text>
-                  <Text style={styles.pixBeneficiario}>
-                    Beneficiario: {pixInfo.nomeBeneficiario}
+                  <Text style={styles.pixBeneficiário}>
+                    Beneficiário: {pixInfo.nomeBeneficiario}
                   </Text>
                 </View>
               </View>
@@ -612,7 +612,7 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsap
           {/* Observations */}
           {recibo.detalhamento && (
             <View style={styles.detailsBox}>
-              <Text style={styles.detailsTitle}>Observacoes</Text>
+              <Text style={styles.detailsTitle}>Observações</Text>
               <Text style={styles.detailsText}>{recibo.detalhamento}</Text>
             </View>
           )}
@@ -650,8 +650,8 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsap
             </View>
             <View style={styles.footerCol}>
               <View style={styles.footerItem}>
-                <Text style={styles.footerLabel}>Endereco: </Text>
-                <Text style={styles.footerValue}>Rua Adley, 108, Morada de Santa Fe</Text>
+                <Text style={styles.footerLabel}>Endereço: </Text>
+                <Text style={styles.footerValue}>Rua Adley, 108, Morada de Santa Fé</Text>
               </View>
               <View style={styles.footerItem}>
                 <Text style={styles.footerValue}>Cariacica/ES - CEP 29.143-719</Text>

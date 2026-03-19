@@ -249,7 +249,7 @@ export default function ClientesPage() {
                   CNPJ
                 </th>
                 <th className="px-6 py-4 text-right text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] w-1/5">
-                  Acoes
+                  Ações
                 </th>
               </tr>
             </thead>
@@ -375,13 +375,13 @@ export default function ClientesPage() {
             {cnpjStatus === "not_found" && !cnpjLoading && (
               <div className="flex items-center gap-2 mt-2 text-[13px] text-[#FF9500]">
                 <span className="material-symbols-outlined text-[16px]">warning</span>
-                CNPJ nao encontrado na base da Receita Federal
+                CNPJ não encontrado na base da Receita Federal
               </div>
             )}
           </div>
 
           <Input
-            label="Nome / Razao Social"
+            label="Nome / Razão Social"
             placeholder="Ex: JC Solucoes Tecnologicas Ltda"
             value={formData.nome}
             onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
@@ -397,7 +397,7 @@ export default function ClientesPage() {
           />
 
           <Input
-            label="Nome do Responsavel"
+            label="Nome do Responsável"
             placeholder="Ex: Joao Silva"
             value={formData.responsavel}
             onChange={(e) =>
@@ -432,7 +432,7 @@ export default function ClientesPage() {
       <Modal
         isOpen={!!deleteConfirm}
         onClose={() => setDeleteConfirm(null)}
-        title="Confirmar Exclusao"
+        title="Confirmar Exclusão"
         size="sm"
       >
         <div className="space-y-4">
@@ -444,7 +444,7 @@ export default function ClientesPage() {
             <span className="material-symbols-outlined text-[18px] mt-0.5">
               warning
             </span>
-            <span>Esta acao ira remover todos os recibos associados a este cliente.</span>
+            <span>Esta ação irá remover todos os recibos associados a este cliente.</span>
           </p>
           <div className="flex gap-3 pt-2">
             <Button

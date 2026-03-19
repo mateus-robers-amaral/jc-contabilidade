@@ -9,7 +9,7 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: "space_dashboard" },
   { href: "/recibos", label: "Recibos", icon: "receipt_long" },
   { href: "/clientes", label: "Clientes", icon: "groups" },
-  { href: "/configuracoes", label: "Configuracoes", icon: "settings" },
+  { href: "/configuracoes", label: "Configurações", icon: "settings" },
 ];
 
 interface SidebarProps {
@@ -48,7 +48,7 @@ export default function Sidebar({ userName = "Usuario", userRole = "Admin" }: Si
                 J AMARAL CONTABIL
               </h1>
               <p className="text-[var(--text-tertiary)] text-[12px] font-medium">
-                Gestao Fiscal
+                Gestão Fiscal
               </p>
             </div>
           </div>

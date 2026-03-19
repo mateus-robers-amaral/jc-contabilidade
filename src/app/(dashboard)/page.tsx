@@ -82,7 +82,7 @@ export default async function DashboardPage() {
             className="inline-flex items-center gap-2 h-11 px-5 rounded-xl border border-[var(--border-primary)] text-[var(--text-primary)] text-[15px] font-medium bg-[var(--surface-primary)] hover:bg-[var(--bg-tertiary)] transition-all"
           >
             <span className="material-symbols-outlined text-[20px]">download</span>
-            <span>Relatorio</span>
+            <span>Relatório</span>
           </Link>
           <Link
             href="/recibos?new=true"
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-[var(--text-primary)] text-[20px] font-bold">
-            Ultimos Recibos
+            Últimos Recibos
           </h3>
           <Link
             href="/recibos"
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
               <thead>
                 <tr className="bg-[var(--bg-secondary)] border-b border-[var(--border-primary)]">
                   <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-                    Referencia
+                    Referência
                   </th>
                   <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
                     Cliente
@@ -161,7 +161,7 @@ export default async function DashboardPage() {
                     Status
                   </th>
                   <th className="px-6 py-4 text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] text-right">
-                    Acoes
+                    Ações
                   </th>
                 </tr>
               </thead>
