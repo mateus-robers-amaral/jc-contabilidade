@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
               id: true,
               nome: true,
               cnpj: true,
+              email: true,
             },
           },
         },
