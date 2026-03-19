@@ -141,11 +141,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     console.log(`[EMAIL] Enviando para: ${recibo.cliente.email}`);
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: {
         user: smtpUser,
         pass: smtpPass,
       },
+      tls: {
+        servername: "smtp.gmail.com",
+      },
+      // Forçar IPv4 (Railway não suporta IPv6)
+      family: 4,
     });
 
     await transporter.sendMail({
