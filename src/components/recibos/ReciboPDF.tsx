@@ -653,7 +653,7 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo }: Recib
                 <Text style={styles.footerValue}>Rua Adley, 108, Morada de Santa Fe</Text>
               </View>
               <View style={styles.footerItem}>
-                <Text style={styles.footerValue}>Cariacica/ES</Text>
+                <Text style={styles.footerValue}>Cariacica/ES - CEP 29.143-719</Text>
               </View>
             </View>
           </View>
