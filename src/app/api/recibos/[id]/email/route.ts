@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
-import nodemailer from "nodemailer";
-import dns from "dns";
+import { Resend } from "resend";
 import prisma from "@/lib/prisma";
 import ReciboPDF from "@/components/recibos/ReciboPDF";
-
-export const maxDuration = 30;
 import { generatePixQRCode } from "@/lib/pix";
 import fs from "fs";
 import path from "path";
+
+export const maxDuration = 30;
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -52,24 +51,22 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     if (!recibo) {
       return NextResponse.json(
-        { success: false, error: "Recibo nao encontrado" },
+        { success: false, error: "Recibo não encontrado" },
         { status: 404 }
       );
     }
 
     if (!recibo.cliente.email) {
       return NextResponse.json(
-        { success: false, error: "Cliente nao possui e-mail cadastrado" },
+        { success: false, error: "Cliente não possui e-mail cadastrado" },
         { status: 400 }
       );
     }
 
-    // Check SMTP config
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
-    if (!smtpUser || !smtpPass) {
+    const resendKey = process.env.RESEND_API_KEY;
+    if (!resendKey) {
       return NextResponse.json(
-        { success: false, error: "Configuracoes de e-mail (SMTP) nao definidas no servidor" },
+        { success: false, error: "Chave da API de e-mail (RESEND_API_KEY) não definida" },
         { status: 500 }
       );
     }
@@ -138,28 +135,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const safeClienteName = clienteName.replace(/[^a-zA-Z0-9]/g, "_");
     const filename = `recibo_${safeClienteName}_${monthYear}.pdf`;
 
-    // Send email via Gmail SMTP
+    // Send email via Resend API (HTTPS, não SMTP)
     console.log(`[EMAIL] Enviando para: ${recibo.cliente.email}`);
 
-    // Resolver Gmail SMTP para IPv4 (Railway não suporta IPv6)
-    const { address } = await dns.promises.lookup("smtp.gmail.com", { family: 4 });
-    console.log(`[EMAIL] Gmail SMTP IPv4: ${address}`);
-
-    const transporter = nodemailer.createTransport({
-      host: address,
-      port: 587,
-      secure: false,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-      tls: {
-        servername: "smtp.gmail.com",
-      },
-    } as nodemailer.TransportOptions);
-
-    await transporter.sendMail({
-      from: `"J AMARAL CONTABIL" <${smtpUser}>`,
+    const resend = new Resend(resendKey);
+    const { error } = await resend.emails.send({
+      from: "J AMARAL CONTABIL <onboarding@resend.dev>",
       to: recibo.cliente.email,
       subject: customSubject || `Recibo de Honorários - ${mesAno} | J AMARAL CONTABIL`,
       html: `
@@ -222,10 +203,17 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         {
           filename,
           content: Buffer.from(pdfBuffer),
-          contentType: "application/pdf",
         },
       ],
     });
+
+    if (error) {
+      console.error(`[EMAIL] ERRO Resend: ${error.message}`);
+      return NextResponse.json(
+        { success: false, error: `Erro ao enviar e-mail: ${error.message}` },
+        { status: 500 }
+      );
+    }
 
     console.log(`[EMAIL] Enviado com sucesso para ${recibo.cliente.email}`);
     return NextResponse.json({
@@ -234,9 +222,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Erro desconhecido";
-    const stack = error instanceof Error ? error.stack : "";
     console.error(`[EMAIL] ERRO: ${msg}`);
-    console.error(`[EMAIL] Stack: ${stack}`);
     return NextResponse.json(
       { success: false, error: `Erro ao enviar e-mail: ${msg}` },
       { status: 500 }
