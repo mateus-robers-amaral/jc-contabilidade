@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import type { ApiResponse, PaginatedResponse, Cliente, CreateClienteDTO } from "@/types";
-import { parseCNPJ, validateCNPJ } from "@/lib/utils";
+import { parseCNPJ, validateDocument } from "@/lib/utils";
 
 // GET /api/clientes - List all clients with pagination
 export async function GET(request: NextRequest) {
@@ -61,16 +61,16 @@ export async function POST(request: NextRequest) {
 
     if (!nome || !cnpj) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: "Nome e CNPJ sao obrigatorios" },
+        { success: false, error: "Nome e CPF/CNPJ são obrigatórios" },
         { status: 400 }
       );
     }
 
     const cleanedCNPJ = parseCNPJ(cnpj);
 
-    if (!validateCNPJ(cleanedCNPJ)) {
+    if (!validateDocument(cleanedCNPJ)) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: "CNPJ invalido" },
+        { success: false, error: "CPF/CNPJ inválido" },
         { status: 400 }
       );
     }

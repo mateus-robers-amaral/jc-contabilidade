@@ -92,26 +92,41 @@ export default function ClientesPage() {
     fetchClientes();
   }, [fetchClientes]);
 
-  // Auto-fetch CNPJ data when 14 digits are typed
-  const fetchCNPJData = useCallback(async (cnpjDigits: string) => {
-    if (cnpjDigits.length !== 14 || cnpjDigits === lastFetchedCnpj.current) return;
-    lastFetchedCnpj.current = cnpjDigits;
+  // Auto-fetch document data
+  const fetchDocData = useCallback(async (digits: string, type: DocType) => {
+    if (digits === lastFetchedCnpj.current) return;
+    if (type === "cnpj" && digits.length !== 14) return;
+    if (type === "cpf" && digits.length !== 11) return;
+
+    lastFetchedCnpj.current = digits;
     setCnpjLoading(true);
     setCnpjStatus("idle");
 
     try {
-      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjDigits}`);
+      const url = type === "cpf"
+        ? `https://brasilapi.com.br/api/cpf/v1/${digits}`
+        : `https://brasilapi.com.br/api/cnpj/v1/${digits}`;
+
+      const res = await fetch(url);
       if (!res.ok) {
         setCnpjStatus("not_found");
         return;
       }
-      const data: CNPJData = await res.json();
+      const data = await res.json();
       setCnpjStatus("found");
-      setFormData((prev) => ({
-        ...prev,
-        nome: data.razao_social || data.nome_fantasia || prev.nome,
-        email: data.email && data.email !== "" ? data.email : prev.email,
-      }));
+
+      if (type === "cpf") {
+        setFormData((prev) => ({
+          ...prev,
+          nome: data.nome || prev.nome,
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          nome: data.razao_social || data.nome_fantasia || prev.nome,
+          email: data.email && data.email !== "" ? data.email : prev.email,
+        }));
+      }
     } catch {
       setCnpjStatus("error");
     } finally {
@@ -124,10 +139,14 @@ export default function ClientesPage() {
     setFormData({ ...formData, cnpj: masked });
 
     const digits = masked.replace(/\D/g, "");
-    if (docType === "cnpj" && digits.length === 14 && !editingCliente) {
-      fetchCNPJData(digits);
-    } else {
-      setCnpjStatus("idle");
+    if (!editingCliente) {
+      if (docType === "cnpj" && digits.length === 14) {
+        fetchDocData(digits, "cnpj");
+      } else if (docType === "cpf" && digits.length === 11) {
+        fetchDocData(digits, "cpf");
+      } else {
+        setCnpjStatus("idle");
+      }
     }
   };
 
@@ -417,19 +436,19 @@ export default function ClientesPage() {
             {cnpjLoading && (
               <div className="flex items-center gap-2 mt-2 text-[13px] text-[#00AEEF]">
                 <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
-                Buscando dados do CNPJ...
+                Buscando dados do {docType.toUpperCase()}...
               </div>
             )}
             {cnpjStatus === "found" && !cnpjLoading && (
               <div className="flex items-center gap-2 mt-2 text-[13px] text-[#34C759]">
                 <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                CNPJ encontrado - dados preenchidos automaticamente
+                {docType.toUpperCase()} encontrado - dados preenchidos automaticamente
               </div>
             )}
             {cnpjStatus === "not_found" && !cnpjLoading && (
               <div className="flex items-center gap-2 mt-2 text-[13px] text-[#FF9500]">
                 <span className="material-symbols-outlined text-[16px]">warning</span>
-                CNPJ não encontrado na base da Receita Federal
+                {docType.toUpperCase()} não encontrado na base da Receita Federal
               </div>
             )}
           </div>
