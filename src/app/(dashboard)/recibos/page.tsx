@@ -418,7 +418,8 @@ export default function RecibosPage() {
                         </a>
                         <button
                           onClick={() => openEmailModal(recibo)}
-                          className={`size-9 rounded-full flex items-center justify-center transition-all ${
+                          disabled={!!sendingEmail}
+                          className={`size-9 rounded-full flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                             emailSuccess === recibo.id
                               ? "text-[#34C759] bg-[rgba(52,199,89,0.1)]"
                               : "text-[var(--text-tertiary)] hover:text-[#5856D6] hover:bg-[rgba(88,86,214,0.1)]"
@@ -636,7 +637,7 @@ export default function RecibosPage() {
       {/* Email Modal */}
       <Modal
         isOpen={!!emailModal}
-        onClose={() => setEmailModal(null)}
+        onClose={() => { if (!sendingEmail) setEmailModal(null); }}
         title="Enviar Recibo por E-mail"
         description={emailModal?.cliente?.email ? `Para: ${emailModal.cliente.email}` : ""}
       >
@@ -647,7 +648,8 @@ export default function RecibosPage() {
               type="text"
               value={emailAssunto}
               onChange={(e) => setEmailAssunto(e.target.value)}
-              className="w-full rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] border border-[var(--border-primary)] bg-[var(--surface-primary)] focus:border-[#00AEEF] h-[48px] px-4 text-[14px] transition-all"
+              disabled={!!sendingEmail}
+              className="w-full rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] border border-[var(--border-primary)] bg-[var(--surface-primary)] focus:border-[#00AEEF] h-[48px] px-4 text-[14px] transition-all disabled:opacity-50"
             />
           </div>
 
@@ -656,8 +658,9 @@ export default function RecibosPage() {
             <textarea
               value={emailMensagem}
               onChange={(e) => setEmailMensagem(e.target.value)}
+              disabled={!!sendingEmail}
               rows={5}
-              className="w-full rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] border border-[var(--border-primary)] bg-[var(--surface-primary)] focus:border-[#00AEEF] p-4 text-[14px] transition-all resize-none"
+              className="w-full rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] border border-[var(--border-primary)] bg-[var(--surface-primary)] focus:border-[#00AEEF] p-4 text-[14px] transition-all resize-none disabled:opacity-50"
             />
             <p className="text-[var(--text-tertiary)] text-[12px]">
               O PDF do recibo sera anexado automaticamente ao e-mail.
@@ -676,6 +679,7 @@ export default function RecibosPage() {
               type="button"
               variant="secondary"
               className="flex-1"
+              disabled={!!sendingEmail}
               onClick={() => setEmailModal(null)}
             >
               Cancelar
@@ -683,6 +687,7 @@ export default function RecibosPage() {
             <Button
               type="button"
               className="flex-1"
+              disabled={!!sendingEmail}
               loading={!!sendingEmail}
               icon={sendingEmail ? undefined : "send"}
               onClick={handleSendEmail}
