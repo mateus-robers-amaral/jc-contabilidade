@@ -140,7 +140,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const resend = new Resend(resendKey);
     const { error } = await resend.emails.send({
-      from: "J AMARAL CONTABIL <onboarding@resend.dev>",
+      from: "J AMARAL CONTABIL <adm@jamaralcontabil.com.br>",
       to: recibo.cliente.email,
       subject: customSubject || `Recibo de Honorários - ${mesAno} | J AMARAL CONTABIL`,
       html: `
