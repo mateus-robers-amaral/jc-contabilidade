@@ -127,12 +127,20 @@ export default function RecibosPage() {
     setDrawerOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitRecibo = async () => {
     setFormError("");
     setFormLoading(true);
 
     try {
+      if (!formData.clienteId) {
+        setFormError("Selecione um cliente");
+        return;
+      }
+      if (!formData.honorario || formData.honorario <= 0) {
+        setFormError("Informe o valor dos honorarios");
+        return;
+      }
+
       const url = editingRecibo
         ? `/api/recibos/${editingRecibo.id}`
         : "/api/recibos";
@@ -158,6 +166,11 @@ export default function RecibosPage() {
     } finally {
       setFormLoading(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitRecibo();
   };
 
   const handleDelete = async () => {
@@ -389,17 +402,31 @@ export default function RecibosPage() {
         title={editingRecibo ? "Editar Recibo" : "Emitir Novo Recibo"}
         description="Preencha os detalhes financeiros para gerar o documento."
         footer={
-          <div className="flex gap-4">
-            <Button
-              variant="secondary"
-              className="flex-1"
-              onClick={() => setDrawerOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button className="flex-1" loading={formLoading} onClick={handleSubmit}>
-              Salvar Recibo
-            </Button>
+          <div className="flex flex-col gap-3">
+            {formError && (
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[rgba(255,59,48,0.1)] border border-[rgba(255,59,48,0.2)] text-[#FF3B30] text-[14px]">
+                <span className="material-symbols-outlined text-[20px]">error</span>
+                {formError}
+              </div>
+            )}
+            <div className="flex gap-4">
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex-1"
+                onClick={() => setDrawerOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                className="flex-1"
+                loading={formLoading}
+                onClick={() => submitRecibo()}
+              >
+                Salvar Recibo
+              </Button>
+            </div>
           </div>
         }
       >
@@ -512,12 +539,6 @@ export default function RecibosPage() {
             </div>
           </div>
 
-          {formError && (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-[rgba(255,59,48,0.1)] border border-[rgba(255,59,48,0.2)] text-[#FF3B30] text-[14px]">
-              <span className="material-symbols-outlined text-[20px]">error</span>
-              {formError}
-            </div>
-          )}
         </form>
       </Drawer>
 
