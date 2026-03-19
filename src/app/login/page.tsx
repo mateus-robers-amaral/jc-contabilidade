@@ -138,14 +138,9 @@ export default function LoginPage() {
               <span className="material-symbols-outlined text-[#00AEEF] text-[20px] mt-0.5">
                 info
               </span>
-              <div>
-                <p className="text-[var(--text-secondary)] text-[13px]">
-                  Execute o seed do banco para criar um usuario de teste:
-                </p>
-                <code className="block mt-2 text-[12px] text-[#00AEEF] bg-[var(--bg-tertiary)] px-3 py-2 rounded-lg font-mono">
-                  npm run db:seed
-                </code>
-              </div>
+              <p className="text-[var(--text-secondary)] text-[13px]">
+                Entre com suas credenciais para acessar o sistema.
+              </p>
             </div>
           </div>
         </div>
