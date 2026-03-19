@@ -490,7 +490,7 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsap
             <View style={styles.headerLeft}>
               {logoSrc && <Image style={styles.logoImage} src={logoSrc} />}
               <View style={styles.companyInfo}>
-                <Text style={styles.companyName}>J Amaral Contabilidade</Text>
+                <Text style={styles.companyName}>J AMARAL CONTABIL</Text>
                 <Text style={styles.companySubtitle}>Gestao Fiscal e Contabil</Text>
               </View>
             </View>

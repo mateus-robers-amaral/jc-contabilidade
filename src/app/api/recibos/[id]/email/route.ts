@@ -134,26 +134,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Send email
     const transporter = nodemailer.createTransport({
-      host: "smtp-mail.outlook.com",
-      port: 587,
-      secure: false,
+      host: process.env.SMTP_HOST || "mail.jamaralcontabil.com.br",
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: process.env.SMTP_SECURE === "true",
       auth: {
         user: smtpUser,
         pass: smtpPass,
       },
-      tls: {
-        ciphers: "SSLv3",
-      },
     });
 
     await transporter.sendMail({
-      from: `"J Amaral Contabilidade" <${smtpUser}>`,
+      from: `"J AMARAL CONTABIL" <${smtpUser}>`,
       to: recibo.cliente.email,
-      subject: `Recibo de Honorarios - ${mesAno} | J Amaral Contabilidade`,
+      subject: `Recibo de Honorarios - ${mesAno} | J AMARAL CONTABIL`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
           <div style="background: #2E3192; padding: 24px; border-radius: 12px 12px 0 0;">
-            <h1 style="color: #fff; margin: 0; font-size: 20px;">J Amaral Contabilidade</h1>
+            <h1 style="color: #fff; margin: 0; font-size: 20px;">J AMARAL CONTABIL</h1>
             <p style="color: rgba(255,255,255,0.7); margin: 4px 0 0; font-size: 13px;">Gestao Fiscal e Contabil</p>
           </div>
 

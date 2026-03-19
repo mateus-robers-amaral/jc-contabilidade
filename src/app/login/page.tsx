@@ -60,14 +60,14 @@ export default function LoginPage() {
           <div className="flex items-center justify-center size-24 rounded-3xl bg-white shadow-xl shadow-[rgba(0,174,239,0.2)] mb-5 overflow-hidden">
             <Image
               src="/logoJC.png"
-              alt="J Amaral Contabilidade"
+              alt="J AMARAL CONTABIL"
               width={96}
               height={96}
               className="object-contain p-2"
             />
           </div>
           <h1 className="text-[var(--text-primary)] text-[28px] font-bold tracking-tight">
-            J Amaral Contabilidade
+            J AMARAL CONTABIL
           </h1>
           <p className="text-[var(--text-tertiary)] text-[15px] mt-1">
             Sistema de Gestao Fiscal
@@ -147,7 +147,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-[var(--text-tertiary)] text-[13px] mt-8">
-          &copy; {new Date().getFullYear()} J Amaral Contabilidade. Todos os direitos reservados.
+          &copy; {new Date().getFullYear()} J AMARAL CONTABIL. Todos os direitos reservados.
         </p>
       </div>
     </div>
