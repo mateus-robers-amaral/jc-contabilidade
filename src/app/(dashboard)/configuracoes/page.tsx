@@ -153,7 +153,7 @@ export default function ConfiguracoesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Nome do Beneficiario"
-                placeholder="Ex: JC Contabilidade"
+                placeholder="Ex: J Amaral Contabilidade"
                 value={formData.pixNomeBeneficiario}
                 onChange={(e) =>
                   setFormData({ ...formData, pixNomeBeneficiario: e.target.value })

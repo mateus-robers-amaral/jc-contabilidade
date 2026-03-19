@@ -147,13 +147,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     await transporter.sendMail({
-      from: `"JC Contabilidade" <${smtpUser}>`,
+      from: `"J Amaral Contabilidade" <${smtpUser}>`,
       to: recibo.cliente.email,
-      subject: `Recibo de Honorarios - ${mesAno} | JC Contabilidade`,
+      subject: `Recibo de Honorarios - ${mesAno} | J Amaral Contabilidade`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
           <div style="background: #2E3192; padding: 24px; border-radius: 12px 12px 0 0;">
-            <h1 style="color: #fff; margin: 0; font-size: 20px;">JC Contabilidade</h1>
+            <h1 style="color: #fff; margin: 0; font-size: 20px;">J Amaral Contabilidade</h1>
             <p style="color: rgba(255,255,255,0.7); margin: 4px 0 0; font-size: 13px;">Gestao Fiscal e Contabil</p>
           </div>
 

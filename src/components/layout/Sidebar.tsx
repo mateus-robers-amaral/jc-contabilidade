@@ -37,7 +37,7 @@ export default function Sidebar({ userName = "Usuario", userRole = "Admin" }: Si
             <div className="flex items-center justify-center size-11 rounded-2xl overflow-hidden bg-white shadow-lg shadow-[rgba(0,174,239,0.2)]">
               <Image
                 src="/logoJC.png"
-                alt="JC Contabilidade"
+                alt="J Amaral Contabilidade"
                 width={44}
                 height={44}
                 className="object-contain"
@@ -45,7 +45,7 @@ export default function Sidebar({ userName = "Usuario", userRole = "Admin" }: Si
             </div>
             <div className="flex flex-col">
               <h1 className="text-[var(--text-primary)] text-[17px] font-bold tracking-tight">
-                JC Contabilidade
+                J Amaral Contabilidade
               </h1>
               <p className="text-[var(--text-tertiary)] text-[12px] font-medium">
                 Gestao Fiscal
