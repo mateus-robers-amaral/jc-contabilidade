@@ -192,6 +192,32 @@ export default function RecibosPage() {
     }
   };
 
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
+
+  const handleSendEmail = async (recibo: Recibo) => {
+    if (!recibo.cliente?.email) {
+      setFormError("Cliente nao possui e-mail cadastrado");
+      return;
+    }
+    setSendingEmail(recibo.id);
+    setEmailSuccess(null);
+    try {
+      const res = await fetch(`/api/recibos/${recibo.id}/email`, { method: "POST" });
+      const data: ApiResponse = await res.json();
+      if (data.success) {
+        setEmailSuccess(recibo.id);
+        setTimeout(() => setEmailSuccess(null), 4000);
+      } else {
+        alert(data.error || "Erro ao enviar e-mail");
+      }
+    } catch {
+      alert("Erro ao conectar com o servidor");
+    } finally {
+      setSendingEmail(null);
+    }
+  };
+
   const handleStatusChange = async (recibo: Recibo, newStatus: string) => {
     try {
       const res = await fetch(`/api/recibos/${recibo.id}`, {
@@ -365,6 +391,20 @@ export default function RecibosPage() {
                             download
                           </span>
                         </a>
+                        <button
+                          onClick={() => handleSendEmail(recibo)}
+                          disabled={sendingEmail === recibo.id}
+                          className={`size-9 rounded-full flex items-center justify-center transition-all ${
+                            emailSuccess === recibo.id
+                              ? "text-[#34C759] bg-[rgba(52,199,89,0.1)]"
+                              : "text-[var(--text-tertiary)] hover:text-[#5856D6] hover:bg-[rgba(88,86,214,0.1)]"
+                          }`}
+                          title={recibo.cliente?.email ? `Enviar para ${recibo.cliente.email}` : "Cliente sem e-mail"}
+                        >
+                          <span className={`material-symbols-outlined text-[20px] ${sendingEmail === recibo.id ? "animate-spin" : ""}`}>
+                            {sendingEmail === recibo.id ? "progress_activity" : emailSuccess === recibo.id ? "check_circle" : "mail"}
+                          </span>
+                        </button>
                         <button
                           onClick={() => setDeleteConfirm(recibo)}
                           className="size-9 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#FF3B30] hover:bg-[rgba(255,59,48,0.1)] transition-colors"

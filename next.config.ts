@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     "bcryptjs",
     "@react-pdf/renderer",
     "qrcode",
+    "nodemailer",
   ],
 };
 
