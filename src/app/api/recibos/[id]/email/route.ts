@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import nodemailer from "nodemailer";
+import dns from "dns";
 import prisma from "@/lib/prisma";
 import ReciboPDF from "@/components/recibos/ReciboPDF";
 
@@ -140,8 +141,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Send email via Gmail SMTP
     console.log(`[EMAIL] Enviando para: ${recibo.cliente.email}`);
 
+    // Resolver Gmail SMTP para IPv4 (Railway não suporta IPv6)
+    const { address } = await dns.promises.lookup("smtp.gmail.com", { family: 4 });
+    console.log(`[EMAIL] Gmail SMTP IPv4: ${address}`);
+
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
+      host: address,
       port: 465,
       secure: true,
       auth: {
@@ -151,9 +156,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       tls: {
         servername: "smtp.gmail.com",
       },
-      // Forçar IPv4 (Railway não suporta IPv6)
-      family: 4,
-    });
+    } as nodemailer.TransportOptions);
 
     await transporter.sendMail({
       from: `"J AMARAL CONTABIL" <${smtpUser}>`,
