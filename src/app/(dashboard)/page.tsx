@@ -2,6 +2,8 @@ import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { formatCurrency, formatMonthYear, getInitials } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 async function getDashboardData() {
   const [totalClientes, totalRecibos, recibosRecentes, faturamentoMensal] =
     await Promise.all([
