@@ -147,8 +147,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const transporter = nodemailer.createTransport({
       host: address,
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
       auth: {
         user: smtpUser,
         pass: smtpPass,
