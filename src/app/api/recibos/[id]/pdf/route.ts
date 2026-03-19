@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import prisma from "@/lib/prisma";
 import ReciboPDF from "@/components/recibos/ReciboPDF";
-import { generatePixQRCodeBuffer } from "@/lib/pix";
+import { generatePixQRCode } from "@/lib/pix";
 import fs from "fs";
 import path from "path";
 
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }),
       prisma.settings.findUnique({
         where: { id: "default" },
-      }),
+      }).then((s) => s ?? prisma.settings.create({ data: { id: "default" } })),
     ]);
 
     if (!recibo) {
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       };
 
       try {
-        const qrBuffer = await generatePixQRCodeBuffer({
+        qrCodeBase64 = await generatePixQRCode({
           pixKey: settings.pixKey,
           pixKeyType: settings.pixKeyType || "cnpj",
           nomeBeneficiario: settings.pixNomeBeneficiario,
@@ -88,19 +88,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           valor: Number(recibo.total),
           identificador: recibo.id.slice(-25),
         });
-        qrCodeBase64 = `data:image/png;base64,${qrBuffer.toString("base64")}`;
       } catch (error) {
         console.error("Error generating PIX QR Code:", error);
       }
     }
-
-    // Prepare contact info
-    const contactInfo = settings ? {
-      endereco: settings.endereco,
-      telefone: settings.telefone,
-      whatsapp: settings.whatsapp,
-      email: settings.email,
-    } : null;
 
     // Generate PDF buffer
     const pdfBuffer = await renderToBuffer(
@@ -109,7 +100,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         logoSrc: logoBase64,
         qrCodeSrc: qrCodeBase64,
         pixInfo,
-        contactInfo,
       })
     );
 

@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   signatureLine: {
-    width: 220,
+    width: 260,
     borderTopWidth: 1,
     borderTopColor: DARK,
     marginBottom: 6,
@@ -341,11 +341,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: "Helvetica-Bold",
     color: DARK,
+    textAlign: "center",
   },
   signatureRole: {
     fontSize: 8,
     color: GRAY,
     marginTop: 2,
+    textAlign: "center",
   },
 
   // === FOOTER ===
@@ -355,15 +357,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 44,
-    paddingVertical: 18,
-    backgroundColor: LIGHT_GRAY,
-    borderTopWidth: 1,
-    borderTopColor: BORDER,
+    paddingVertical: 14,
+    backgroundColor: BLUE,
   },
-  footerRow: {
+  footerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 20,
+    marginBottom: 8,
+  },
+  footerCol: {
+    flexDirection: "column",
+    gap: 3,
   },
   footerItem: {
     flexDirection: "row",
@@ -373,35 +377,30 @@ const styles = StyleSheet.create({
   footerLabel: {
     fontSize: 7,
     fontFamily: "Helvetica-Bold",
-    color: GRAY,
+    color: "rgba(255,255,255,0.6)",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   footerValue: {
     fontSize: 8,
-    color: DARK,
+    color: "#ffffff",
+  },
+  footerDivider: {
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    marginBottom: 6,
   },
   footerBottom: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: BORDER,
+    justifyContent: "center",
   },
   footerCompany: {
     fontSize: 7,
-    color: GRAY,
+    color: "rgba(255,255,255,0.5)",
     letterSpacing: 0.3,
+    textAlign: "center",
   },
 });
-
-interface ContactInfo {
-  endereco?: string | null;
-  telefone?: string | null;
-  whatsapp?: string | null;
-  email?: string | null;
-}
 
 interface PixInfo {
   chave: string;
@@ -432,7 +431,6 @@ interface ReciboPDFProps {
   logoSrc?: string | null;
   qrCodeSrc?: string | null;
   pixInfo?: PixInfo | null;
-  contactInfo?: ContactInfo | null;
 }
 
 function formatCurrency(value: number): string {
@@ -469,7 +467,7 @@ function pixKeyTypeLabel(type: string): string {
   return labels[type] || type.toUpperCase();
 }
 
-export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, contactInfo }: ReciboPDFProps) {
+export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo }: ReciboPDFProps) {
   const items = [
     { description: "Honorarios Contabeis", value: Number(recibo.honorario) },
     { description: "13o Salario", value: Number(recibo.decimoTerceiro) },
@@ -478,10 +476,6 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, contact
     { description: "Material de Expediente", value: Number(recibo.materialExpediente) },
     { description: "Outros Servicos", value: Number(recibo.outros) },
   ].filter((item) => item.value > 0);
-
-  const hasContact = contactInfo && (
-    contactInfo.endereco || contactInfo.telefone || contactInfo.whatsapp || contactInfo.email
-  );
 
   return (
     <Document>
@@ -625,47 +619,48 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, contact
           {/* Signature */}
           <View style={styles.signatureArea}>
             <View style={styles.signatureLine} />
-            <Text style={styles.signatureName}>JC Contabilidade</Text>
-            <Text style={styles.signatureRole}>Responsavel Tecnico</Text>
+            <Text style={styles.signatureName}>Jean Claude Rezende do Amaral</Text>
+            <Text style={styles.signatureRole}>Contador - CRC-ES 008870/O-5</Text>
           </View>
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          {hasContact && (
-            <View style={styles.footerRow}>
-              {contactInfo?.endereco && (
-                <View style={styles.footerItem}>
-                  <Text style={styles.footerLabel}>Endereco: </Text>
-                  <Text style={styles.footerValue}>{contactInfo.endereco}</Text>
-                </View>
-              )}
-              {contactInfo?.telefone && (
-                <View style={styles.footerItem}>
-                  <Text style={styles.footerLabel}>Tel: </Text>
-                  <Text style={styles.footerValue}>{contactInfo.telefone}</Text>
-                </View>
-              )}
-              {contactInfo?.whatsapp && (
-                <View style={styles.footerItem}>
-                  <Text style={styles.footerLabel}>WhatsApp: </Text>
-                  <Text style={styles.footerValue}>{contactInfo.whatsapp}</Text>
-                </View>
-              )}
-              {contactInfo?.email && (
-                <View style={styles.footerItem}>
-                  <Text style={styles.footerLabel}>E-mail: </Text>
-                  <Text style={styles.footerValue}>{contactInfo.email}</Text>
-                </View>
-              )}
+          <View style={styles.footerTop}>
+            <View style={styles.footerCol}>
+              <View style={styles.footerItem}>
+                <Text style={styles.footerLabel}>Tel: </Text>
+                <Text style={styles.footerValue}>(27) 3336-3213</Text>
+              </View>
+              <View style={styles.footerItem}>
+                <Text style={styles.footerLabel}>Cel: </Text>
+                <Text style={styles.footerValue}>(27) 99932-6612</Text>
+              </View>
             </View>
-          )}
+            <View style={styles.footerCol}>
+              <View style={styles.footerItem}>
+                <Text style={styles.footerLabel}>Cel: </Text>
+                <Text style={styles.footerValue}>(27) 99792-6300</Text>
+              </View>
+              <View style={styles.footerItem}>
+                <Text style={styles.footerLabel}>E-mail: </Text>
+                <Text style={styles.footerValue}>adm@jamaralcontabil.com.br</Text>
+              </View>
+            </View>
+            <View style={styles.footerCol}>
+              <View style={styles.footerItem}>
+                <Text style={styles.footerLabel}>Endereco: </Text>
+                <Text style={styles.footerValue}>Rua Adley, 108, Morada de Santa Fe</Text>
+              </View>
+              <View style={styles.footerItem}>
+                <Text style={styles.footerValue}>Cariacica/ES</Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.footerDivider} />
           <View style={styles.footerBottom}>
             <Text style={styles.footerCompany}>
-              JC Contabilidade - Gestao Fiscal e Contabil
-            </Text>
-            <Text style={styles.footerCompany}>
-              Documento gerado eletronicamente
+              Jean Claude Rezende do Amaral - Contador - CRC-ES 008870/O-5 - Documento gerado eletronicamente
             </Text>
           </View>
         </View>

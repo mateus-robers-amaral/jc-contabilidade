@@ -1,9 +1,25 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button, Input, Modal, Pagination } from "@/components/ui";
-import { formatCNPJ, getInitials } from "@/lib/utils";
+import { formatCNPJ, parseCNPJ, getInitials } from "@/lib/utils";
 import type { Cliente, PaginatedResponse, ApiResponse } from "@/types";
+
+interface CNPJData {
+  razao_social: string;
+  nome_fantasia: string;
+  email: string;
+  descricao_situacao_cadastral: string;
+}
+
+function maskCNPJ(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 14);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
+  if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
+  if (digits.length <= 12) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
+  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
+}
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -28,6 +44,9 @@ export default function ClientesPage() {
   });
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+  const [cnpjStatus, setCnpjStatus] = useState<"idle" | "found" | "not_found" | "error">("idle");
+  const lastFetchedCnpj = useRef("");
 
   const fetchClientes = useCallback(async () => {
     setLoading(true);
@@ -56,6 +75,45 @@ export default function ClientesPage() {
     fetchClientes();
   }, [fetchClientes]);
 
+  // Auto-fetch CNPJ data when 14 digits are typed
+  const fetchCNPJData = useCallback(async (cnpjDigits: string) => {
+    if (cnpjDigits.length !== 14 || cnpjDigits === lastFetchedCnpj.current) return;
+    lastFetchedCnpj.current = cnpjDigits;
+    setCnpjLoading(true);
+    setCnpjStatus("idle");
+
+    try {
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjDigits}`);
+      if (!res.ok) {
+        setCnpjStatus("not_found");
+        return;
+      }
+      const data: CNPJData = await res.json();
+      setCnpjStatus("found");
+      setFormData((prev) => ({
+        ...prev,
+        nome: data.razao_social || data.nome_fantasia || prev.nome,
+        email: data.email && data.email !== "" ? data.email : prev.email,
+      }));
+    } catch {
+      setCnpjStatus("error");
+    } finally {
+      setCnpjLoading(false);
+    }
+  }, []);
+
+  const handleCNPJChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const masked = maskCNPJ(e.target.value);
+    setFormData({ ...formData, cnpj: masked });
+
+    const digits = masked.replace(/\D/g, "");
+    if (digits.length === 14 && !editingCliente) {
+      fetchCNPJData(digits);
+    } else {
+      setCnpjStatus("idle");
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPagination((prev) => ({ ...prev, page: 1 }));
@@ -66,6 +124,8 @@ export default function ClientesPage() {
     setEditingCliente(null);
     setFormData({ nome: "", cnpj: "", email: "", responsavel: "" });
     setFormError("");
+    setCnpjStatus("idle");
+    lastFetchedCnpj.current = "";
     setModalOpen(true);
   };
 
@@ -78,6 +138,8 @@ export default function ClientesPage() {
       responsavel: cliente.responsavel || "",
     });
     setFormError("");
+    setCnpjStatus("idle");
+    lastFetchedCnpj.current = parseCNPJ(cliente.cnpj);
     setModalOpen(true);
   };
 
@@ -289,19 +351,40 @@ export default function ClientesPage() {
         description="Preencha os dados do cliente"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* CNPJ first — auto-fills nome */}
+          <div>
+            <Input
+              label="CNPJ"
+              placeholder="00.000.000/0000-00"
+              value={formData.cnpj}
+              onChange={handleCNPJChange}
+              required
+            />
+            {cnpjLoading && (
+              <div className="flex items-center gap-2 mt-2 text-[13px] text-[#00AEEF]">
+                <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+                Buscando dados do CNPJ...
+              </div>
+            )}
+            {cnpjStatus === "found" && !cnpjLoading && (
+              <div className="flex items-center gap-2 mt-2 text-[13px] text-[#34C759]">
+                <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                CNPJ encontrado - dados preenchidos automaticamente
+              </div>
+            )}
+            {cnpjStatus === "not_found" && !cnpjLoading && (
+              <div className="flex items-center gap-2 mt-2 text-[13px] text-[#FF9500]">
+                <span className="material-symbols-outlined text-[16px]">warning</span>
+                CNPJ nao encontrado na base da Receita Federal
+              </div>
+            )}
+          </div>
+
           <Input
             label="Nome / Razao Social"
             placeholder="Ex: JC Solucoes Tecnologicas Ltda"
             value={formData.nome}
             onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-            required
-          />
-
-          <Input
-            label="CNPJ"
-            placeholder="00.000.000/0000-00"
-            value={formData.cnpj}
-            onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
             required
           />
 
