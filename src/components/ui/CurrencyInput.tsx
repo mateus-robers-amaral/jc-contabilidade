@@ -2,7 +2,6 @@
 
 import { forwardRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { numberToCurrency, parseCurrencyToNumber } from "@/lib/utils";
 
 interface CurrencyInputProps {
   label?: string;
@@ -13,6 +12,13 @@ interface CurrencyInputProps {
   disabled?: boolean;
   placeholder?: string;
   className?: string;
+}
+
+function formatCents(cents: number): string {
+  const reais = Math.floor(cents / 100);
+  const centavos = cents % 100;
+  const reaisStr = reais.toLocaleString("pt-BR");
+  return `${reaisStr},${String(centavos).padStart(2, "0")}`;
 }
 
 const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
@@ -29,46 +35,30 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
     },
     ref
   ) => {
-    const [displayValue, setDisplayValue] = useState(numberToCurrency(value));
+    const [cents, setCents] = useState(Math.round(value * 100));
     const [isFocused, setIsFocused] = useState(false);
 
     useEffect(() => {
-      setDisplayValue(numberToCurrency(value));
+      setCents(Math.round(value * 100));
     }, [value]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const rawValue = e.target.value;
-
-      // Remove everything except digits and comma
-      let cleaned = rawValue.replace(/[^\d,]/g, "");
-
-      // Ensure only one comma
-      const commaIndex = cleaned.indexOf(",");
-      if (commaIndex !== -1) {
-        cleaned =
-          cleaned.slice(0, commaIndex + 1) +
-          cleaned.slice(commaIndex + 1).replace(/,/g, "");
-      }
-
-      // Limit decimal places to 2
-      const parts = cleaned.split(",");
-      if (parts[1] && parts[1].length > 2) {
-        parts[1] = parts[1].slice(0, 2);
-        cleaned = parts.join(",");
-      }
-
-      setDisplayValue(cleaned);
-
-      // Convert to number for onChange
-      const numericValue = parseCurrencyToNumber(cleaned);
-      onChange?.(numericValue);
+      // Extract only digits
+      const digits = e.target.value.replace(/\D/g, "");
+      const newCents = parseInt(digits, 10) || 0;
+      setCents(newCents);
+      onChange?.(newCents / 100);
     };
 
-    const handleBlur = () => {
-      setIsFocused(false);
-      // Format value on blur
-      const numericValue = parseCurrencyToNumber(displayValue);
-      setDisplayValue(numberToCurrency(numericValue));
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      // Allow: backspace, delete, tab, escape, enter, arrows
+      if (["Backspace", "Delete", "Tab", "Escape", "Enter", "ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+      // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+      if ((e.ctrlKey || e.metaKey) && ["a", "c", "v", "x"].includes(e.key.toLowerCase())) return;
+      // Block non-digit
+      if (!/^\d$/.test(e.key)) {
+        e.preventDefault();
+      }
     };
 
     return (
@@ -92,10 +82,12 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
           <input
             ref={ref}
             type="text"
-            value={displayValue}
+            inputMode="numeric"
+            value={cents === 0 && !isFocused ? "" : formatCents(cents)}
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
-            onBlur={handleBlur}
+            onBlur={() => setIsFocused(false)}
             disabled={disabled}
             placeholder={placeholder}
             className={cn(

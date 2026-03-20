@@ -170,12 +170,12 @@ export default function ClientesPage() {
                 clientes.map((cliente) => (
                   <tr key={cliente.id} className="group hover:bg-[var(--bg-secondary)] transition-colors">
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center size-11 rounded-xl bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-bold text-[13px]">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center size-10 rounded-full bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-bold text-[13px] shrink-0 shadow-sm">
                           {getInitials(cliente.nome)}
                         </div>
-                        <div>
-                          <div className="text-[14px] font-medium text-[var(--text-primary)]">{cliente.nome}</div>
+                        <div className="min-w-0">
+                          <div className="text-[14px] font-semibold text-[var(--text-primary)] truncate">{cliente.nome}</div>
                           <div className="text-[12px] text-[var(--text-tertiary)]">
                             Cadastrado em {new Date(cliente.createdAt).toLocaleDateString("pt-BR")}
                           </div>
