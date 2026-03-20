@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Modal, Button } from "@/components/ui";
 
 interface DashboardData {
   faturamentoMesAtual: number;
@@ -21,11 +20,6 @@ interface DashboardData {
   }[];
 }
 
-const MONTHS = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-];
-
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
@@ -43,13 +37,6 @@ function getInitials(name: string): string {
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [relatorioOpen, setRelatorioOpen] = useState(false);
-  const [availableData, setAvailableData] = useState<{ ano: number; mes: number }[]>([]);
-  const [selectedYear, setSelectedYear] = useState<number | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
-  const [relatorioLoading, setRelatorioLoading] = useState(false);
-  const [relatorioError, setRelatorioError] = useState("");
-
   useEffect(() => {
     fetch("/api/dashboard")
       .then((res) => res.json())
@@ -59,58 +46,6 @@ export default function DashboardPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
-
-  // Fetch available months when modal opens
-  useEffect(() => {
-    if (!relatorioOpen) return;
-    fetch("/api/relatorios/meses-disponiveis")
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) setAvailableData(res.data);
-      })
-      .catch(console.error);
-  }, [relatorioOpen]);
-
-  const availableYears = [...new Set(availableData.map((d) => d.ano))].sort((a, b) => b - a);
-  const availableMonths = selectedYear
-    ? availableData.filter((d) => d.ano === selectedYear).map((d) => d.mes).sort((a, b) => b - a)
-    : [];
-
-  const openRelatorioModal = () => {
-    setSelectedYear(null);
-    setSelectedMonth(null);
-    setRelatorioError("");
-    setRelatorioOpen(true);
-  };
-
-  const handleDownloadRelatorio = async () => {
-    if (!selectedYear || !selectedMonth) return;
-    setRelatorioLoading(true);
-    setRelatorioError("");
-    try {
-      const mesParam = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}`;
-      const res = await fetch(`/api/relatorios/mensal?mes=${mesParam}`);
-      if (!res.ok) {
-        const err = await res.json();
-        setRelatorioError(err.error || "Erro ao gerar relatório");
-        return;
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `relatorio_${MONTHS[selectedMonth - 1].toLowerCase()}_${selectedYear}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      setRelatorioOpen(false);
-    } catch {
-      setRelatorioError("Erro ao conectar com o servidor");
-    } finally {
-      setRelatorioLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -135,13 +70,13 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={openRelatorioModal}
-            className="inline-flex items-center gap-2 h-11 px-5 rounded-xl border border-[var(--border-primary)] text-[var(--text-primary)] text-[15px] font-medium bg-[var(--surface-primary)] hover:bg-[var(--bg-tertiary)] transition-all cursor-pointer"
+          <Link
+            href="/recibos"
+            className="inline-flex items-center gap-2 h-11 px-5 rounded-xl border border-[var(--border-primary)] text-[var(--text-primary)] text-[15px] font-medium bg-[var(--surface-primary)] hover:bg-[var(--bg-tertiary)] transition-all"
           >
-            <span className="material-symbols-outlined text-[20px]">download</span>
-            <span>Relatório</span>
-          </button>
+            <span className="material-symbols-outlined text-[20px]">receipt_long</span>
+            <span>Ver Recibos</span>
+          </Link>
           <Link
             href="/recibos?new=true"
             className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-[#00AEEF] text-white text-[15px] font-semibold shadow-[0_2px_8px_rgba(0,174,239,0.3)] hover:shadow-[0_4px_16px_rgba(0,174,239,0.4)] hover:bg-[#0095CC] transition-all"
@@ -353,112 +288,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Report Wizard Modal */}
-      <Modal
-        isOpen={relatorioOpen}
-        onClose={() => setRelatorioOpen(false)}
-        title="Gerar Relatório Mensal"
-        description={
-          availableYears.length === 0
-            ? "Nenhum recibo cadastrado ainda"
-            : !selectedYear
-            ? "Selecione o ano"
-            : "Selecione o mês"
-        }
-        size="sm"
-      >
-        <div className="space-y-4">
-          {availableYears.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-4">
-              <div className="size-14 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[28px] text-[var(--text-quaternary)]">
-                  inbox
-                </span>
-              </div>
-              <p className="text-[var(--text-tertiary)] text-[14px]">
-                Cadastre recibos para gerar relatórios
-              </p>
-            </div>
-          ) : !selectedYear ? (
-            /* Step 1: Pick year */
-            <div className="grid grid-cols-2 gap-3">
-              {availableYears.map((year) => {
-                const count = availableData.filter((d) => d.ano === year).length;
-                return (
-                  <button
-                    key={year}
-                    onClick={() => setSelectedYear(year)}
-                    className="flex flex-col items-center gap-1 p-4 rounded-xl border border-[var(--border-primary)] bg-[var(--surface-primary)] hover:border-[#00AEEF] hover:bg-[rgba(0,174,239,0.05)] transition-all cursor-pointer"
-                  >
-                    <span className="text-[var(--text-primary)] text-[20px] font-bold">{year}</span>
-                    <span className="text-[var(--text-tertiary)] text-[12px]">
-                      {count} {count === 1 ? "mês" : "meses"}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            /* Step 2: Pick month */
-            <>
-              <button
-                onClick={() => {
-                  setSelectedYear(null);
-                  setSelectedMonth(null);
-                  setRelatorioError("");
-                }}
-                className="inline-flex items-center gap-1 text-[#00AEEF] text-[14px] font-medium hover:underline cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                {selectedYear}
-              </button>
-              <div className="grid grid-cols-3 gap-3">
-                {availableMonths.map((mes) => (
-                  <button
-                    key={mes}
-                    onClick={() => setSelectedMonth(mes)}
-                    className={`flex items-center justify-center p-3 rounded-xl border text-[14px] font-medium transition-all cursor-pointer ${
-                      selectedMonth === mes
-                        ? "border-[#00AEEF] bg-[#00AEEF] text-white"
-                        : "border-[var(--border-primary)] bg-[var(--surface-primary)] text-[var(--text-primary)] hover:border-[#00AEEF] hover:bg-[rgba(0,174,239,0.05)]"
-                    }`}
-                  >
-                    {MONTHS[mes - 1]}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
-          {relatorioError && (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-[rgba(255,59,48,0.1)] border border-[rgba(255,59,48,0.2)] text-[#FF3B30] text-[14px]">
-              <span className="material-symbols-outlined text-[20px]">error</span>
-              {relatorioError}
-            </div>
-          )}
-
-          {selectedYear && (
-            <div className="flex gap-3 pt-2">
-              <Button
-                variant="secondary"
-                className="flex-1"
-                onClick={() => setRelatorioOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                className="flex-1"
-                onClick={handleDownloadRelatorio}
-                loading={relatorioLoading}
-                icon="download"
-                disabled={!selectedMonth}
-              >
-                Baixar PDF
-              </Button>
-            </div>
-          )}
-        </div>
-      </Modal>
     </div>
   );
 }
