@@ -295,7 +295,7 @@ export default function RecibosPage() {
       if (data.success) {
         setEmailModal(null);
         setEmailSuccess(reciboId);
-        setTimeout(() => setEmailSuccess(null), 4000);
+        setTimeout(() => setEmailSuccess(null), 8000);
       } else { setEmailError(data.error || "Erro ao enviar e-mail"); }
     } catch { setEmailError("Erro ao conectar com o servidor"); }
     finally { setSendingEmail(null); }
@@ -303,6 +303,14 @@ export default function RecibosPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Email Success Toast */}
+      {emailSuccess && (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-5 py-3 rounded-xl bg-[#34C759] text-white text-[14px] font-medium shadow-lg animate-fadeIn">
+          <span className="material-symbols-outlined text-[20px]">check_circle</span>
+          E-mail enviado com sucesso!
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
