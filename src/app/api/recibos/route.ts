@@ -72,10 +72,21 @@ export async function GET(request: NextRequest) {
       prisma.recibo.count({ where }),
     ]);
 
+    const serialized = recibos.map((r) => ({
+      ...r,
+      honorario: Number(r.honorario),
+      decimoTerceiro: Number(r.decimoTerceiro),
+      registro: Number(r.registro),
+      alteracao: Number(r.alteracao),
+      materialExpediente: Number(r.materialExpediente),
+      outros: Number(r.outros),
+      total: Number(r.total),
+    }));
+
     return NextResponse.json<ApiResponse<PaginatedResponse<Recibo>>>({
       success: true,
       data: {
-        data: recibos as unknown as Recibo[],
+        data: serialized as unknown as Recibo[],
         pagination: {
           page,
           limit,

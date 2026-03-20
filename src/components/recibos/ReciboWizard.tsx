@@ -96,11 +96,11 @@ export default function ReciboWizard({
       const formatted = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
       setFormData({
         mesReferencia: formatted,
-        honorario: editingRecibo.honorario,
-        decimoTerceiro: editingRecibo.decimoTerceiro,
-        registro: editingRecibo.registro,
-        alteracao: editingRecibo.alteracao,
-        outros: editingRecibo.outros,
+        honorario: Number(editingRecibo.honorario) || 0,
+        decimoTerceiro: Number(editingRecibo.decimoTerceiro) || 0,
+        registro: Number(editingRecibo.registro) || 0,
+        alteracao: Number(editingRecibo.alteracao) || 0,
+        outros: Number(editingRecibo.outros) || 0,
         detalhamento: editingRecibo.detalhamento || "",
       });
     } else {
