@@ -1,68 +1,135 @@
+"use client";
+
 import Link from "next/link";
-import prisma from "@/lib/prisma";
-import { formatCurrency, formatMonthYear, getInitials } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { Modal, Button } from "@/components/ui";
 
-export const dynamic = "force-dynamic";
-
-async function getDashboardData() {
-  const [totalClientes, totalRecibos, recibosRecentes, faturamentoMensal] =
-    await Promise.all([
-      prisma.cliente.count(),
-      prisma.recibo.count(),
-      prisma.recibo.findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        include: {
-          cliente: {
-            select: { nome: true },
-          },
-        },
-      }),
-      prisma.recibo.aggregate({
-        _sum: { total: true },
-        where: {
-          mesReferencia: {
-            gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-          },
-        },
-      }),
-    ]);
-
-  return {
-    totalClientes,
-    totalRecibos,
-    recibosRecentes,
-    faturamentoMensal: Number(faturamentoMensal._sum.total || 0),
-  };
+interface DashboardData {
+  totalClientes: number;
+  totalRecibos: number;
+  faturamentoMensal: number;
+  recibosRecentes: {
+    id: string;
+    mesReferencia: string;
+    total: number;
+    status: string;
+    cliente: { nome: string };
+  }[];
 }
 
-export default async function DashboardPage() {
-  const { totalClientes, totalRecibos, recibosRecentes, faturamentoMensal } =
-    await getDashboardData();
+const MONTHS = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
 
-  const stats = [
-    {
-      label: "Recibos Emitidos",
-      value: totalRecibos.toString(),
-      icon: "receipt_long",
-      color: "#00AEEF",
-      bgColor: "rgba(0, 174, 239, 0.1)",
-    },
-    {
-      label: "Clientes Ativos",
-      value: totalClientes.toString(),
-      icon: "groups",
-      color: "#34C759",
-      bgColor: "rgba(52, 199, 89, 0.1)",
-    },
-    {
-      label: "Faturamento Mensal",
-      value: formatCurrency(faturamentoMensal),
-      icon: "payments",
-      color: "#5856D6",
-      bgColor: "rgba(88, 86, 214, 0.1)",
-    },
-  ];
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+}
+
+function formatMonthYear(date: string | Date): string {
+  const d = new Date(date);
+  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  return `${months[d.getMonth()]}/${d.getFullYear()}`;
+}
+
+function getInitials(name: string): string {
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+}
+
+export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [relatorioOpen, setRelatorioOpen] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const [relatorioLoading, setRelatorioLoading] = useState(false);
+  const [relatorioError, setRelatorioError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/dashboard")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) setData(res.data);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleDownloadRelatorio = async () => {
+    setRelatorioLoading(true);
+    setRelatorioError("");
+    try {
+      const res = await fetch(`/api/relatorios/mensal?mes=${selectedMonth}`);
+      if (!res.ok) {
+        const err = await res.json();
+        setRelatorioError(err.error || "Erro ao gerar relatório");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const [year, month] = selectedMonth.split("-").map(Number);
+      a.download = `relatorio_${MONTHS[month - 1].toLowerCase()}_${year}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setRelatorioOpen(false);
+    } catch {
+      setRelatorioError("Erro ao conectar com o servidor");
+    } finally {
+      setRelatorioLoading(false);
+    }
+  };
+
+  // Generate month options (last 12 months + current)
+  const monthOptions: { value: string; label: string }[] = [];
+  const now = new Date();
+  for (let i = 0; i < 13; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+    monthOptions.push({ value, label });
+  }
+
+  const stats = data
+    ? [
+        {
+          label: "Recibos Emitidos",
+          value: data.totalRecibos.toString(),
+          icon: "receipt_long",
+          color: "#00AEEF",
+          bgColor: "rgba(0, 174, 239, 0.1)",
+        },
+        {
+          label: "Clientes Ativos",
+          value: data.totalClientes.toString(),
+          icon: "groups",
+          color: "#34C759",
+          bgColor: "rgba(52, 199, 89, 0.1)",
+        },
+        {
+          label: "Faturamento Mensal",
+          value: formatCurrency(data.faturamentoMensal),
+          icon: "payments",
+          color: "#5856D6",
+          bgColor: "rgba(88, 86, 214, 0.1)",
+        },
+      ]
+    : [];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <span className="material-symbols-outlined animate-spin text-[#00AEEF] text-[32px]">
+          progress_activity
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -77,13 +144,16 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <Link
-            href="/recibos"
-            className="inline-flex items-center gap-2 h-11 px-5 rounded-xl border border-[var(--border-primary)] text-[var(--text-primary)] text-[15px] font-medium bg-[var(--surface-primary)] hover:bg-[var(--bg-tertiary)] transition-all"
+          <button
+            onClick={() => {
+              setRelatorioError("");
+              setRelatorioOpen(true);
+            }}
+            className="inline-flex items-center gap-2 h-11 px-5 rounded-xl border border-[var(--border-primary)] text-[var(--text-primary)] text-[15px] font-medium bg-[var(--surface-primary)] hover:bg-[var(--bg-tertiary)] transition-all cursor-pointer"
           >
             <span className="material-symbols-outlined text-[20px]">download</span>
             <span>Relatório</span>
-          </Link>
+          </button>
           <Link
             href="/recibos?new=true"
             className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-[#00AEEF] text-white text-[15px] font-semibold shadow-[0_2px_8px_rgba(0,174,239,0.3)] hover:shadow-[0_4px_16px_rgba(0,174,239,0.4)] hover:bg-[#0095CC] transition-all"
@@ -162,7 +232,7 @@ export default async function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-secondary)]">
-                {recibosRecentes.length === 0 ? (
+                {!data || data.recibosRecentes.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center gap-3">
@@ -184,7 +254,7 @@ export default async function DashboardPage() {
                     </td>
                   </tr>
                 ) : (
-                  recibosRecentes.map((recibo) => (
+                  data.recibosRecentes.map((recibo) => (
                     <tr
                       key={recibo.id}
                       className="group hover:bg-[var(--bg-secondary)] transition-colors"
@@ -244,6 +314,67 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Report Month Picker Modal */}
+      <Modal
+        isOpen={relatorioOpen}
+        onClose={() => setRelatorioOpen(false)}
+        title="Gerar Relatório Mensal"
+        description="Selecione o mês para gerar o relatório em PDF"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[var(--text-primary)] text-[15px] font-medium mb-2">
+              Mês de referência
+            </label>
+            <div className="relative flex items-center h-[52px] w-full rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] focus-within:border-[#00AEEF] focus-within:ring-4 focus-within:ring-[rgba(0,174,239,0.15)] transition-all">
+              <div className="absolute left-4 text-[var(--text-tertiary)] pointer-events-none">
+                <span className="material-symbols-outlined text-[20px]">calendar_month</span>
+              </div>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-full h-full bg-transparent pl-11 pr-4 rounded-xl text-[var(--text-primary)] focus:outline-none text-[15px] font-medium appearance-none cursor-pointer"
+              >
+                {monthOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 text-[var(--text-tertiary)] pointer-events-none">
+                <span className="material-symbols-outlined text-[18px]">expand_more</span>
+              </div>
+            </div>
+          </div>
+
+          {relatorioError && (
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-[rgba(255,59,48,0.1)] border border-[rgba(255,59,48,0.2)] text-[#FF3B30] text-[14px]">
+              <span className="material-symbols-outlined text-[20px]">error</span>
+              {relatorioError}
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <Button
+              variant="secondary"
+              className="flex-1"
+              onClick={() => setRelatorioOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleDownloadRelatorio}
+              loading={relatorioLoading}
+              icon="download"
+            >
+              Baixar PDF
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
