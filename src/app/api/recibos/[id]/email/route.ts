@@ -215,6 +215,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Mark as sent in database
+    await prisma.recibo.update({
+      where: { id },
+      data: { emailEnviadoEm: new Date() },
+    });
+
     console.log(`[EMAIL] Enviado com sucesso para ${recibo.cliente.email}`);
     return NextResponse.json({
       success: true,

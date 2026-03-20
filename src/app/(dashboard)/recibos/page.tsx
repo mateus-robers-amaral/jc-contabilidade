@@ -46,8 +46,6 @@ export default function RecibosPage() {
 
   // Email state
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
-  const [sentEmails, setSentEmails] = useState<Set<string>>(new Set());
-  const [showToast, setShowToast] = useState(false);
   const [emailModal, setEmailModal] = useState<Recibo | null>(null);
   const [emailAssunto, setEmailAssunto] = useState("");
   const [emailMensagem, setEmailMensagem] = useState("");
@@ -295,8 +293,7 @@ export default function RecibosPage() {
       const data: ApiResponse = await res.json();
       if (data.success) {
         setEmailModal(null);
-        setSentEmails((prev) => new Set(prev).add(reciboId));
-        setShowToast(true);
+        fetchRecibos();
       } else { setEmailError(data.error || "Erro ao enviar e-mail"); }
     } catch { setEmailError("Erro ao conectar com o servidor"); }
     finally { setSendingEmail(null); }
@@ -304,17 +301,6 @@ export default function RecibosPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Email Success Toast */}
-      {showToast && (
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-5 py-3 rounded-xl bg-[#34C759] text-white text-[14px] font-medium shadow-lg animate-fadeIn">
-          <span className="material-symbols-outlined text-[20px]">check_circle</span>
-          E-mail enviado com sucesso!
-          <button onClick={() => setShowToast(false)} className="ml-1 hover:opacity-80">
-            <span className="material-symbols-outlined text-[18px]">close</span>
-          </button>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
@@ -492,9 +478,9 @@ export default function RecibosPage() {
                               <a href={`/api/recibos/${recibo.id}/pdf`} download className="size-8 rounded-full flex items-center justify-center text-[#00AEEF] hover:bg-[#00AEEF] hover:text-white transition-all" title="Download PDF">
                                 <span className="material-symbols-outlined text-[18px]">download</span>
                               </a>
-                              {sentEmails.has(recibo.id) ? (
+                              {recibo.emailEnviadoEm ? (
                                 <>
-                                  <span className="size-8 rounded-full flex items-center justify-center text-[#34C759] bg-[rgba(52,199,89,0.1)]" title="E-mail enviado">
+                                  <span className="size-8 rounded-full flex items-center justify-center text-[#34C759] bg-[rgba(52,199,89,0.1)]" title={`Enviado em ${new Date(recibo.emailEnviadoEm).toLocaleDateString("pt-BR")}`}>
                                     <span className="material-symbols-outlined text-[18px]">check_circle</span>
                                   </span>
                                   <button onClick={() => openEmailModal(recibo)} disabled={!!sendingEmail}

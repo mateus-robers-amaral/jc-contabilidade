@@ -33,6 +33,7 @@ export interface Recibo {
   detalhamento: string | null;
   total: number;
   status: "pendente" | "pago" | "cancelado";
+  emailEnviadoEm: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
