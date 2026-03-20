@@ -5,9 +5,13 @@ import { useState, useEffect } from "react";
 import { Modal, Button } from "@/components/ui";
 
 interface DashboardData {
+  faturamentoMesAtual: number;
+  faturamentoMesAnterior: number;
+  diffFaturamento: number;
+  totalPendente: number;
+  countPendente: number;
+  clientesSemRecibo: number;
   totalClientes: number;
-  totalRecibos: number;
-  faturamentoMensal: number;
   recibosRecentes: {
     id: string;
     mesReferencia: string;
@@ -108,32 +112,6 @@ export default function DashboardPage() {
     }
   };
 
-  const stats = data
-    ? [
-        {
-          label: "Recibos Emitidos",
-          value: data.totalRecibos.toString(),
-          icon: "receipt_long",
-          color: "#00AEEF",
-          bgColor: "rgba(0, 174, 239, 0.1)",
-        },
-        {
-          label: "Clientes Ativos",
-          value: data.totalClientes.toString(),
-          icon: "groups",
-          color: "#34C759",
-          bgColor: "rgba(52, 199, 89, 0.1)",
-        },
-        {
-          label: "Faturamento Mensal",
-          value: formatCurrency(data.faturamentoMensal),
-          icon: "payments",
-          color: "#5856D6",
-          bgColor: "rgba(88, 86, 214, 0.1)",
-        },
-      ]
-    : [];
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
@@ -175,34 +153,84 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="flex flex-col p-6 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm hover:shadow-md transition-all"
-          >
+      {data && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Faturamento do Mês */}
+          <div className="flex flex-col p-6 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm hover:shadow-md transition-all">
             <div className="flex items-center justify-between mb-4">
-              <div
-                className="flex items-center justify-center size-12 rounded-2xl"
-                style={{ backgroundColor: stat.bgColor }}
-              >
-                <span
-                  className="material-symbols-outlined text-[24px]"
-                  style={{ color: stat.color }}
-                >
-                  {stat.icon}
-                </span>
+              <div className="flex items-center justify-center size-12 rounded-2xl bg-[rgba(0,174,239,0.1)]">
+                <span className="material-symbols-outlined text-[24px] text-[#00AEEF]">payments</span>
               </div>
+              {data.faturamentoMesAnterior > 0 && (
+                <div className={`flex items-center gap-1 text-[13px] font-medium ${data.diffFaturamento >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"}`}>
+                  <span className="material-symbols-outlined text-[16px]">
+                    {data.diffFaturamento >= 0 ? "trending_up" : "trending_down"}
+                  </span>
+                  <span>
+                    {data.diffFaturamento >= 0 ? "+" : ""}
+                    {formatCurrency(data.diffFaturamento)}
+                  </span>
+                </div>
+              )}
             </div>
             <p className="text-[var(--text-tertiary)] text-[13px] font-medium mb-1">
-              {stat.label}
+              Faturamento do Mês
             </p>
             <p className="text-[var(--text-primary)] text-[28px] font-bold tracking-tight">
-              {stat.value}
+              {formatCurrency(data.faturamentoMesAtual)}
+            </p>
+            {data.faturamentoMesAnterior > 0 && (
+              <p className="text-[var(--text-tertiary)] text-[12px] mt-1">
+                vs {formatCurrency(data.faturamentoMesAnterior)} mês anterior
+              </p>
+            )}
+          </div>
+
+          {/* A Receber */}
+          <div className="flex flex-col p-6 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-center size-12 rounded-2xl bg-[rgba(255,149,0,0.1)]">
+                <span className="material-symbols-outlined text-[24px] text-[#FF9500]">schedule</span>
+              </div>
+              {data.countPendente > 0 && (
+                <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-semibold bg-[rgba(255,149,0,0.15)] text-[#FF9500]">
+                  {data.countPendente} {data.countPendente === 1 ? "recibo" : "recibos"}
+                </span>
+              )}
+            </div>
+            <p className="text-[var(--text-tertiary)] text-[13px] font-medium mb-1">
+              A Receber
+            </p>
+            <p className="text-[var(--text-primary)] text-[28px] font-bold tracking-tight">
+              {formatCurrency(data.totalPendente)}
+            </p>
+            <p className="text-[var(--text-tertiary)] text-[12px] mt-1">
+              Pendente de pagamento
             </p>
           </div>
-        ))}
-      </div>
+
+          {/* Clientes sem Recibo */}
+          <div className="flex flex-col p-6 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm hover:shadow-md transition-all">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-center size-12 rounded-2xl bg-[rgba(88,86,214,0.1)]">
+                <span className="material-symbols-outlined text-[24px] text-[#5856D6]">group_off</span>
+              </div>
+              <span className="text-[var(--text-tertiary)] text-[12px] font-medium">
+                de {data.totalClientes} clientes
+              </span>
+            </div>
+            <p className="text-[var(--text-tertiary)] text-[13px] font-medium mb-1">
+              Clientes sem Recibo
+            </p>
+            <p className="text-[var(--text-primary)] text-[28px] font-bold tracking-tight">
+              {data.clientesSemRecibo}
+            </p>
+            <p className="text-[var(--text-tertiary)] text-[12px] mt-1">
+              Sem recibo emitido este mês
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Recent Receipts */}
       <div className="flex flex-col gap-4">
