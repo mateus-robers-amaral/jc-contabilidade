@@ -58,6 +58,8 @@ export default function RecibosPage() {
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [relatorioLoading, setRelatorioLoading] = useState(false);
   const [relatorioError, setRelatorioError] = useState("");
+  const [relatorioPdfUrl, setRelatorioPdfUrl] = useState<string | null>(null);
+  const [relatorioPdfLabel, setRelatorioPdfLabel] = useState("");
   const [emailError, setEmailError] = useState("");
 
   const fetchRecibos = useCallback(async () => {
@@ -119,7 +121,7 @@ export default function RecibosPage() {
     setRelatorioOpen(true);
   };
 
-  const handleDownloadRelatorio = async () => {
+  const handleViewRelatorio = async () => {
     if (!selectedYear || !selectedMonth) return;
     setRelatorioLoading(true);
     setRelatorioError("");
@@ -133,19 +135,29 @@ export default function RecibosPage() {
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `relatorio_${MESES[selectedMonth - 1].toLowerCase()}_${selectedYear}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setRelatorioPdfUrl(url);
+      setRelatorioPdfLabel(`${MESES[selectedMonth - 1]} ${selectedYear}`);
       setRelatorioOpen(false);
     } catch {
       setRelatorioError("Erro ao conectar com o servidor");
     } finally {
       setRelatorioLoading(false);
     }
+  };
+
+  const handleDownloadRelatorio = () => {
+    if (!relatorioPdfUrl) return;
+    const a = document.createElement("a");
+    a.href = relatorioPdfUrl;
+    a.download = `relatorio_${relatorioPdfLabel.replace(" ", "_").toLowerCase()}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const closeRelatorioPdf = () => {
+    if (relatorioPdfUrl) URL.revokeObjectURL(relatorioPdfUrl);
+    setRelatorioPdfUrl(null);
   };
 
   // Group recibos by month
@@ -598,13 +610,48 @@ export default function RecibosPage() {
               <Button variant="secondary" className="flex-1" onClick={() => setRelatorioOpen(false)}>
                 Cancelar
               </Button>
-              <Button className="flex-1" onClick={handleDownloadRelatorio} loading={relatorioLoading} icon="download" disabled={!selectedMonth}>
-                Baixar PDF
+              <Button className="flex-1" onClick={handleViewRelatorio} loading={relatorioLoading} icon="visibility" disabled={!selectedMonth}>
+                Visualizar
               </Button>
             </div>
           )}
         </div>
       </Modal>
+
+      {/* PDF Viewer Modal */}
+      {relatorioPdfUrl && (
+        <div className="fixed inset-0 z-50 flex flex-col">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeRelatorioPdf} />
+          <div className="relative flex flex-col w-full h-full max-w-5xl mx-auto p-4 md:p-8">
+            {/* Header */}
+            <div className="flex items-center justify-between bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-t-2xl px-6 py-4 z-10">
+              <div>
+                <h2 className="text-[var(--text-primary)] text-[18px] font-bold">Relatório Mensal</h2>
+                <p className="text-[var(--text-tertiary)] text-[13px]">{relatorioPdfLabel}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button onClick={handleDownloadRelatorio} icon="download" size="sm">
+                  Baixar PDF
+                </Button>
+                <button
+                  onClick={closeRelatorioPdf}
+                  className="flex items-center justify-center size-10 rounded-xl hover:bg-[var(--bg-tertiary)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                >
+                  <span className="material-symbols-outlined text-[22px]">close</span>
+                </button>
+              </div>
+            </div>
+            {/* PDF iframe */}
+            <div className="flex-1 bg-[var(--bg-tertiary)] border-x border-b border-[var(--border-primary)] rounded-b-2xl overflow-hidden">
+              <iframe
+                src={relatorioPdfUrl}
+                className="w-full h-full"
+                title="Relatório Mensal PDF"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
