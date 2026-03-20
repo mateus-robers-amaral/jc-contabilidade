@@ -457,7 +457,7 @@ function formatMonthYear(date: Date): string {
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
   ];
   const d = new Date(date);
-  return `${months[d.getMonth()]} ${d.getFullYear()}`;
+  return `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
 function pixKeyTypeLabel(type: string): string {

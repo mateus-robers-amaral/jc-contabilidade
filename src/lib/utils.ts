@@ -99,7 +99,7 @@ export function formatMonthYear(date: Date | string): string {
     "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
     "Jul", "Ago", "Set", "Out", "Nov", "Dez"
   ];
-  return `${months[d.getMonth()]}/${d.getFullYear()}`;
+  return `${months[d.getUTCMonth()]}/${d.getUTCFullYear()}`;
 }
 
 export function getInitials(name: string): string {

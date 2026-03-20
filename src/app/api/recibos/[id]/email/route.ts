@@ -123,7 +123,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
       "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
     ];
-    const mesAno = `${meses[mesRef.getMonth()]}/${mesRef.getFullYear()}`;
+    const mesAno = `${meses[mesRef.getUTCMonth()]}/${mesRef.getUTCFullYear()}`;
     const clienteName = recibo.cliente.nome;
     const valor = Number(recibo.total).toLocaleString("pt-BR", {
       style: "currency",
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     // Build filename
-    const monthYear = `${mesRef.getMonth() + 1}-${mesRef.getFullYear()}`;
+    const monthYear = `${mesRef.getUTCMonth() + 1}-${mesRef.getUTCFullYear()}`;
     const safeClienteName = clienteName.replace(/[^a-zA-Z0-9]/g, "_");
     const filename = `recibo_${safeClienteName}_${monthYear}.pdf`;
 

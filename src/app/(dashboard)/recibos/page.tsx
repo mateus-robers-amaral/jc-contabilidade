@@ -15,7 +15,7 @@ const MESES = [
 
 function mesAnoKey(date: Date | string): string {
   const d = new Date(date);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
 function mesAnoLabel(key: string): string {
@@ -235,7 +235,7 @@ export default function RecibosPage() {
     const mesRef = new Date(recibo.mesReferencia);
     setFormData({
       clienteId: recibo.clienteId,
-      mesReferencia: `${mesRef.getFullYear()}-${String(mesRef.getMonth() + 1).padStart(2, "0")}`,
+      mesReferencia: `${mesRef.getUTCFullYear()}-${String(mesRef.getUTCMonth() + 1).padStart(2, "0")}`,
       honorario: Number(recibo.honorario),
       decimoTerceiro: Number(recibo.decimoTerceiro),
       registro: Number(recibo.registro),
@@ -293,7 +293,7 @@ export default function RecibosPage() {
   const openEmailModal = (recibo: Recibo) => {
     if (!recibo.cliente?.email) { alert("Cliente não possui e-mail cadastrado"); return; }
     const mesRef = new Date(recibo.mesReferencia);
-    const mesAno = `${MESES[mesRef.getMonth()]}/${mesRef.getFullYear()}`;
+    const mesAno = `${MESES[mesRef.getUTCMonth()]}/${mesRef.getUTCFullYear()}`;
     const valor = formatCurrency(Number(recibo.total));
     setEmailAssunto(`Recibo de Honorários - ${mesAno} | J AMARAL CONTABIL`);
     setEmailMensagem(`Segue em anexo o recibo de honorários contábeis referente a ${mesAno}, no valor de ${valor}.`);

@@ -104,7 +104,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Create filename
     const mesRef = new Date(recibo.mesReferencia);
-    const monthYear = `${mesRef.getMonth() + 1}-${mesRef.getFullYear()}`;
+    const monthYear = `${mesRef.getUTCMonth() + 1}-${mesRef.getUTCFullYear()}`;
     const clienteName = recibo.cliente.nome.replace(/[^a-zA-Z0-9]/g, "_");
     const filename = `recibo_${clienteName}_${monthYear}.pdf`;
 

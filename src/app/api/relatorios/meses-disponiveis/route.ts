@@ -16,10 +16,10 @@ export async function GET() {
 
     for (const r of recibos) {
       const d = new Date(r.mesReferencia);
-      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+      const key = `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}`;
       if (!seen.has(key)) {
         seen.add(key);
-        result.push({ ano: d.getFullYear(), mes: d.getMonth() + 1 });
+        result.push({ ano: d.getUTCFullYear(), mes: d.getUTCMonth() + 1 });
       }
     }
 
