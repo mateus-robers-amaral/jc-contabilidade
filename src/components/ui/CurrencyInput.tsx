@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useRef } from "react";
+import { forwardRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 interface CurrencyInputProps {
@@ -12,10 +12,6 @@ interface CurrencyInputProps {
   disabled?: boolean;
   placeholder?: string;
   className?: string;
-}
-
-function valueToCents(value: number): number {
-  return Math.round(value * 100);
 }
 
 function formatFromCents(cents: number): string {
@@ -39,25 +35,37 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
     },
     ref
   ) => {
-    const focusedRef = useRef(false);
+    const cents = Math.round(value * 100);
+    const displayValue = cents === 0 ? "" : formatFromCents(cents);
 
-    // Derive display directly from value prop — single source of truth
-    const cents = valueToCents(value);
-    const displayValue = cents === 0 && !focusedRef.current ? "" : formatFromCents(cents);
+    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+      // Allow tab, escape, enter
+      if (["Tab", "Escape", "Enter"].includes(e.key)) return;
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const digits = e.target.value.replace(/\D/g, "");
-      const newCents = parseInt(digits, 10) || 0;
-      onChange?.(newCents / 100);
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (["Backspace", "Delete", "Tab", "Escape", "Enter", "ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+      // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
       if ((e.ctrlKey || e.metaKey) && ["a", "c", "v", "x"].includes(e.key.toLowerCase())) return;
-      if (!/^\d$/.test(e.key)) {
-        e.preventDefault();
+
+      // Always prevent default — we control the value
+      e.preventDefault();
+
+      if (/^\d$/.test(e.key)) {
+        // Append digit: shift left and add
+        const newCents = cents * 10 + parseInt(e.key);
+        if (newCents <= 99999999) { // max R$ 999.999,99
+          onChange?.(newCents / 100);
+        }
+      } else if (e.key === "Backspace") {
+        // Remove last digit: shift right
+        const newCents = Math.floor(cents / 10);
+        onChange?.(newCents / 100);
+      } else if (e.key === "Delete") {
+        // Clear all
+        onChange?.(0);
       }
-    };
+    }, [cents, onChange]);
+
+    // Block paste and manual input — only keyDown controls value
+    const handleChange = useCallback(() => {}, []);
 
     return (
       <label className={cn("flex flex-col gap-2", disabled && "opacity-60")}>
@@ -71,10 +79,7 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
           </p>
         )}
         <div className="relative">
-          <span className={cn(
-            "absolute left-4 top-1/2 -translate-y-1/2 text-[15px] font-medium transition-colors duration-200",
-            focusedRef.current ? "text-[#00AEEF]" : "text-[var(--text-tertiary)]"
-          )}>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] font-medium text-[var(--text-tertiary)]">
             R$
           </span>
           <input
@@ -84,10 +89,9 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
             value={displayValue}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            onFocus={() => { focusedRef.current = true; }}
-            onBlur={() => { focusedRef.current = false; }}
             disabled={disabled}
             placeholder={placeholder}
+            autoComplete="off"
             className={cn(
               "flex w-full min-w-0 rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]",
               "focus:outline-none focus:ring-4 focus:ring-[rgba(0,174,239,0.15)]",
