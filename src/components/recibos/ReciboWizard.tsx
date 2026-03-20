@@ -301,32 +301,62 @@ export default function ReciboWizard({
         )}
 
         {/* Step 1 — Referência */}
-        {step === 1 && (
-          <div className="space-y-6">
-            <div className="flex flex-col gap-2">
-              <span className="text-[var(--text-primary)] text-[15px] font-medium">
-                Mês de Referência
-              </span>
-              <input
-                type="month"
-                value={formData.mesReferencia}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, mesReferencia: e.target.value }))
-                }
-                className="w-full h-[52px] bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 text-[var(--text-primary)] text-[15px] font-medium focus:outline-none focus:border-[#00AEEF] focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] transition-all"
-              />
-            </div>
+        {step === 1 && (() => {
+          const [selYear, selMonth] = formData.mesReferencia.split("-").map(Number);
+          const currentYear = new Date().getFullYear();
+          const years = [currentYear - 1, currentYear, currentYear + 1];
 
-            <div className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
-              <span className="material-symbols-outlined text-[#00AEEF] text-[48px]">
-                calendar_month
-              </span>
-              <span className="text-[var(--text-primary)] text-[24px] font-bold">
-                {formatMonth(formData.mesReferencia)}
-              </span>
+          return (
+            <div className="space-y-5">
+              {/* Year selector */}
+              <div className="flex items-center justify-center gap-2">
+                {years.map((y) => (
+                  <button
+                    key={y}
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, mesReferencia: `${y}-${String(selMonth).padStart(2, "0")}` }))}
+                    className={`px-5 py-2.5 rounded-xl text-[15px] font-semibold transition-all ${
+                      selYear === y
+                        ? "bg-[#00AEEF] text-white shadow-md"
+                        : "bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-primary)] border border-[var(--border-primary)]"
+                    }`}
+                  >
+                    {y}
+                  </button>
+                ))}
+              </div>
+
+              {/* Month grid */}
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {MONTH_NAMES.map((name, i) => {
+                  const monthNum = i + 1;
+                  const isSelected = selMonth === monthNum;
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, mesReferencia: `${selYear}-${String(monthNum).padStart(2, "0")}` }))}
+                      className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl text-[13px] font-medium transition-all ${
+                        isSelected
+                          ? "bg-[#00AEEF] text-white shadow-md"
+                          : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--surface-primary)] hover:text-[var(--text-primary)] border border-transparent hover:border-[var(--border-primary)]"
+                      }`}
+                    >
+                      <span className="text-[15px] font-semibold">{name.slice(0, 3)}</span>
+                      <span className={`text-[11px] ${isSelected ? "text-white/70" : "text-[var(--text-tertiary)]"}`}>{name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Selected display */}
+              <div className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-[rgba(0,174,239,0.08)] border border-[rgba(0,174,239,0.15)]">
+                <span className="material-symbols-outlined text-[#00AEEF] text-[24px]">event</span>
+                <span className="text-[var(--text-primary)] text-[18px] font-bold">{formatMonth(formData.mesReferencia)}</span>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Step 2 — Valores */}
         {step === 2 && (
