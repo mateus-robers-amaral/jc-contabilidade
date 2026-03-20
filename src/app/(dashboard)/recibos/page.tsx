@@ -68,6 +68,7 @@ export default function RecibosPage() {
   const [relatorioError, setRelatorioError] = useState("");
   const [relatorioPdfUrl, setRelatorioPdfUrl] = useState<string | null>(null);
   const [relatorioPdfLabel, setRelatorioPdfLabel] = useState("");
+  const [relatorioFullscreen, setRelatorioFullscreen] = useState(false);
   const [emailError, setEmailError] = useState("");
 
   const fetchRecibos = useCallback(async () => {
@@ -129,28 +130,12 @@ export default function RecibosPage() {
     setRelatorioOpen(true);
   };
 
-  const handleViewRelatorio = async () => {
+  const handleViewRelatorio = () => {
     if (!selectedYear || !selectedMonth) return;
-    setRelatorioLoading(true);
-    setRelatorioError("");
-    try {
-      const mesParam = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}`;
-      const res = await fetch(`/api/relatorios/mensal?mes=${mesParam}`);
-      if (!res.ok) {
-        const err = await res.json();
-        setRelatorioError(err.error || "Erro ao gerar relatório");
-        return;
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      setRelatorioPdfUrl(url);
-      setRelatorioPdfLabel(`${MESES[selectedMonth - 1]} ${selectedYear}`);
-      setRelatorioOpen(false);
-    } catch {
-      setRelatorioError("Erro ao conectar com o servidor");
-    } finally {
-      setRelatorioLoading(false);
-    }
+    const mesParam = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}`;
+    setRelatorioPdfUrl(`/api/relatorios/mensal?mes=${mesParam}`);
+    setRelatorioPdfLabel(`${MESES[selectedMonth - 1]} ${selectedYear}`);
+    setRelatorioOpen(false);
   };
 
   const handleDownloadRelatorio = () => {
@@ -164,8 +149,8 @@ export default function RecibosPage() {
   };
 
   const closeRelatorioPdf = () => {
-    if (relatorioPdfUrl) URL.revokeObjectURL(relatorioPdfUrl);
     setRelatorioPdfUrl(null);
+    setRelatorioFullscreen(false);
   };
 
   // Group recibos by month
@@ -711,39 +696,69 @@ export default function RecibosPage() {
         </div>
       </Modal>
 
-      {/* PDF Viewer Modal */}
+      {/* Relatório PDF Viewer */}
       {relatorioPdfUrl && (
-        <div className="fixed inset-0 z-50 flex flex-col">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeRelatorioPdf} />
-          <div className="relative flex flex-col w-full h-full max-w-5xl mx-auto p-4 md:p-8">
-            {/* Header */}
-            <div className="flex items-center justify-between bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-t-2xl px-6 py-4 z-10">
-              <div>
-                <h2 className="text-[var(--text-primary)] text-[18px] font-bold">Relatório Mensal</h2>
-                <p className="text-[var(--text-tertiary)] text-[13px]">{relatorioPdfLabel}</p>
+        relatorioFullscreen ? (
+          <div className="fixed inset-0 z-50 flex flex-col bg-[var(--bg-primary)]">
+            <div className="flex items-center justify-between px-4 py-2 bg-[var(--surface-primary)] border-b border-[var(--border-primary)]">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center size-9 rounded-lg bg-[rgba(0,174,239,0.1)]">
+                  <span className="material-symbols-outlined text-[#00AEEF] text-[20px]">summarize</span>
+                </div>
+                <div>
+                  <p className="text-[var(--text-primary)] text-[14px] font-semibold">Relatório Mensal</p>
+                  <p className="text-[var(--text-tertiary)] text-[11px]">{relatorioPdfLabel}</p>
+                </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button onClick={handleDownloadRelatorio} icon="download" size="sm">
-                  Baixar PDF
-                </Button>
-                <button
-                  onClick={closeRelatorioPdf}
-                  className="flex items-center justify-center size-10 rounded-xl hover:bg-[var(--bg-tertiary)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
-                >
-                  <span className="material-symbols-outlined text-[22px]">close</span>
+                <Button onClick={handleDownloadRelatorio} icon="download" size="sm" variant="secondary">Baixar</Button>
+                <button onClick={() => setRelatorioFullscreen(false)}
+                  className="size-9 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors" title="Sair da tela cheia">
+                  <span className="material-symbols-outlined text-[20px]">fullscreen_exit</span>
+                </button>
+                <button onClick={closeRelatorioPdf}
+                  className="size-9 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">close</span>
                 </button>
               </div>
             </div>
-            {/* PDF iframe */}
-            <div className="flex-1 bg-[var(--bg-tertiary)] border-x border-b border-[var(--border-primary)] rounded-b-2xl overflow-hidden">
-              <iframe
-                src={relatorioPdfUrl}
-                className="w-full h-full"
-                title="Relatório Mensal PDF"
-              />
+            <div className="flex-1">
+              <iframe src={relatorioPdfUrl} className="w-full h-full" title="Relatório Mensal PDF" />
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="fixed inset-0 z-50 flex flex-col p-4 md:p-8">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeRelatorioPdf} />
+            <div className="relative flex flex-col w-full h-full max-w-5xl mx-auto z-10">
+              <div className="flex items-center justify-between bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-t-2xl px-5 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(0,174,239,0.1)]">
+                    <span className="material-symbols-outlined text-[#00AEEF] text-[22px]">summarize</span>
+                  </div>
+                  <div>
+                    <h2 className="text-[var(--text-primary)] text-[16px] font-bold">Relatório Mensal</h2>
+                    <p className="text-[var(--text-tertiary)] text-[12px]">{relatorioPdfLabel}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button onClick={handleDownloadRelatorio} icon="download" size="sm">Baixar PDF</Button>
+                  <div className="w-px h-6 bg-[var(--border-primary)] mx-1" />
+                  <button onClick={() => setRelatorioFullscreen(true)}
+                    className="size-9 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors" title="Tela cheia">
+                    <span className="material-symbols-outlined text-[20px]">fullscreen</span>
+                  </button>
+                  <button onClick={closeRelatorioPdf}
+                    className="size-9 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+                    <span className="material-symbols-outlined text-[20px]">close</span>
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 bg-[var(--bg-tertiary)] border-x border-b border-[var(--border-primary)] rounded-b-2xl overflow-hidden">
+                <iframe src={relatorioPdfUrl} className="w-full h-full" title="Relatório Mensal PDF" />
+              </div>
+            </div>
+          </div>
+        )
       )}
     </div>
   );
