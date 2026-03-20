@@ -9,7 +9,7 @@ interface ModalProps {
   title: string;
   description?: string;
   children: React.ReactNode;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 export default function Modal({
@@ -44,6 +44,7 @@ export default function Modal({
     sm: "max-w-md",
     md: "max-w-lg",
     lg: "max-w-2xl",
+    xl: "max-w-3xl",
   };
 
   return (
@@ -78,7 +79,7 @@ export default function Modal({
         </div>
 
         {/* Content */}
-        <div className="p-6">{children}</div>
+        <div className="p-6 max-h-[70vh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );

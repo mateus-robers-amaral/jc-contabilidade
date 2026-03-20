@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { Button, SearchableSelect, Drawer, CurrencyInput, Modal } from "@/components/ui";
-import { formatCurrency, getInitials, calculateTotal } from "@/lib/utils";
+import { Button, Modal } from "@/components/ui";
+import { formatCurrency, getInitials } from "@/lib/utils";
+import ReciboWizard from "@/components/recibos/ReciboWizard";
+import ReciboPreviewModal from "@/components/recibos/ReciboPreviewModal";
 import type { Cliente, Recibo, PaginatedResponse, ApiResponse } from "@/types";
-
-const MATERIAL_EXPEDIENTE = 5.0;
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -39,23 +39,10 @@ export default function RecibosPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [drawerOpen, setDrawerOpen] = useState(searchParams.get("new") === "true");
+  const [wizardOpen, setWizardOpen] = useState(searchParams.get("new") === "true");
   const [editingRecibo, setEditingRecibo] = useState<Recibo | null>(null);
+  const [previewRecibo, setPreviewRecibo] = useState<Recibo | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Recibo | null>(null);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    clienteId: "",
-    mesReferencia: new Date().toISOString().slice(0, 7),
-    honorario: 0,
-    decimoTerceiro: 0,
-    registro: 0,
-    alteracao: 0,
-    outros: 0,
-    detalhamento: "",
-  });
-  const [formError, setFormError] = useState("");
-  const [formLoading, setFormLoading] = useState(false);
 
   // Email state
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
@@ -72,15 +59,6 @@ export default function RecibosPage() {
   const [relatorioLoading, setRelatorioLoading] = useState(false);
   const [relatorioError, setRelatorioError] = useState("");
   const [emailError, setEmailError] = useState("");
-
-  const total = calculateTotal({
-    honorario: formData.honorario,
-    decimoTerceiro: formData.decimoTerceiro,
-    registro: formData.registro,
-    alteracao: formData.alteracao,
-    materialExpediente: MATERIAL_EXPEDIENTE,
-    outros: formData.outros,
-  });
 
   const fetchRecibos = useCallback(async () => {
     setLoading(true);
@@ -219,57 +197,15 @@ export default function RecibosPage() {
     fetchRecibos();
   };
 
-  const openNewDrawer = () => {
+  const openNewWizard = () => {
     setEditingRecibo(null);
-    setFormData({
-      clienteId: "",
-      mesReferencia: new Date().toISOString().slice(0, 7),
-      honorario: 0, decimoTerceiro: 0, registro: 0, alteracao: 0, outros: 0, detalhamento: "",
-    });
-    setFormError("");
-    setDrawerOpen(true);
+    setWizardOpen(true);
   };
 
-  const openEditDrawer = (recibo: Recibo) => {
+  const openEditWizard = (recibo: Recibo) => {
     setEditingRecibo(recibo);
-    const mesRef = new Date(recibo.mesReferencia);
-    setFormData({
-      clienteId: recibo.clienteId,
-      mesReferencia: `${mesRef.getUTCFullYear()}-${String(mesRef.getUTCMonth() + 1).padStart(2, "0")}`,
-      honorario: Number(recibo.honorario),
-      decimoTerceiro: Number(recibo.decimoTerceiro),
-      registro: Number(recibo.registro),
-      alteracao: Number(recibo.alteracao),
-      outros: Number(recibo.outros),
-      detalhamento: recibo.detalhamento || "",
-    });
-    setFormError("");
-    setDrawerOpen(true);
+    setWizardOpen(true);
   };
-
-  const submitRecibo = async () => {
-    setFormError("");
-    setFormLoading(true);
-    try {
-      if (!formData.clienteId) { setFormError("Selecione um cliente"); return; }
-      if (!formData.honorario || formData.honorario <= 0) { setFormError("Informe o valor dos honorários"); return; }
-
-      const url = editingRecibo ? `/api/recibos/${editingRecibo.id}` : "/api/recibos";
-      const method = editingRecibo ? "PUT" : "POST";
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) });
-      const data: ApiResponse = await res.json();
-
-      if (!data.success) { setFormError(data.error || "Erro ao salvar recibo"); return; }
-      setDrawerOpen(false);
-      fetchRecibos();
-    } catch {
-      setFormError("Erro ao conectar com o servidor");
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); submitRecibo(); };
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
@@ -337,7 +273,7 @@ export default function RecibosPage() {
             <span className="material-symbols-outlined text-[20px]">download</span>
             <span>Relatório</span>
           </button>
-          <Button onClick={openNewDrawer} icon="add">Novo Recibo</Button>
+          <Button onClick={openNewWizard} icon="add">Novo Recibo</Button>
         </div>
       </div>
 
@@ -458,7 +394,7 @@ export default function RecibosPage() {
                     </thead>
                     <tbody className="divide-y divide-[var(--border-secondary)]">
                       {group.recibos.map((recibo) => (
-                        <tr key={recibo.id} className="group hover:bg-[var(--bg-secondary)] transition-colors">
+                        <tr key={recibo.id} onClick={() => setPreviewRecibo(recibo)} className="group hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer">
                           <td className="px-6 py-3">
                             <div className="flex items-center gap-3">
                               <div className="flex items-center justify-center size-8 rounded-full bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-semibold text-[11px]">
@@ -474,7 +410,7 @@ export default function RecibosPage() {
                               {formatCurrency(Number(recibo.total))}
                             </span>
                           </td>
-                          <td className="px-6 py-3">
+                          <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
                             <select
                               value={recibo.status}
                               onChange={(e) => handleStatusChange(recibo, e.target.value)}
@@ -491,9 +427,9 @@ export default function RecibosPage() {
                               <option value="cancelado">Cancelado</option>
                             </select>
                           </td>
-                          <td className="px-6 py-3">
+                          <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1">
-                              <button onClick={() => openEditDrawer(recibo)} className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#00AEEF] hover:bg-[rgba(0,174,239,0.1)] transition-colors" title="Editar">
+                              <button onClick={() => openEditWizard(recibo)} className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#00AEEF] hover:bg-[rgba(0,174,239,0.1)] transition-colors" title="Editar">
                                 <span className="material-symbols-outlined text-[18px]">edit</span>
                               </button>
                               <a href={`/api/recibos/${recibo.id}/pdf`} download className="size-8 rounded-full flex items-center justify-center text-[#00AEEF] hover:bg-[#00AEEF] hover:text-white transition-all" title="Download PDF">
@@ -523,71 +459,23 @@ export default function RecibosPage() {
         </div>
       )}
 
-      {/* Create/Edit Drawer */}
-      <Drawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)}
-        title={editingRecibo ? "Editar Recibo" : "Emitir Novo Recibo"}
-        description="Preencha os detalhes financeiros para gerar o documento."
-        footer={
-          <div className="flex flex-col gap-3">
-            {formError && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-[rgba(255,59,48,0.1)] border border-[rgba(255,59,48,0.2)] text-[#FF3B30] text-[14px]">
-                <span className="material-symbols-outlined text-[20px]">error</span>
-                {formError}
-              </div>
-            )}
-            <div className="flex gap-4">
-              <Button type="button" variant="secondary" className="flex-1" onClick={() => setDrawerOpen(false)}>Cancelar</Button>
-              <Button type="button" className="flex-1" loading={formLoading} onClick={() => submitRecibo()}>Salvar Recibo</Button>
-            </div>
-          </div>
-        }
-      >
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <SearchableSelect label="Cliente" placeholder="Selecione o cliente..." searchPlaceholder="Buscar cliente por nome ou CPF/CNPJ..."
-                options={clientes.map((c) => ({ value: c.id, label: c.nome, sublabel: c.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5") }))}
-                value={formData.clienteId} onChange={(value) => setFormData({ ...formData, clienteId: value })} required />
-            </div>
-            <div>
-              <label className="flex flex-col gap-2">
-                <span className="text-[var(--text-primary)] text-[15px] font-medium">Mês de Referência</span>
-                <input type="month" value={formData.mesReferencia} onChange={(e) => setFormData({ ...formData, mesReferencia: e.target.value })}
-                  className="flex w-full rounded-xl text-[var(--text-primary)] focus:outline-none focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] border border-[var(--border-primary)] bg-[var(--surface-primary)] focus:border-[#00AEEF] h-[52px] px-4 text-[16px] font-normal transition-all" required />
-              </label>
-            </div>
-          </div>
-          <div className="h-px w-full bg-[var(--border-primary)] my-2" />
-          <div>
-            <h3 className="text-[var(--text-primary)] text-[18px] font-semibold mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#00AEEF] text-[22px]">payments</span>Valores
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <CurrencyInput label="Honorários" value={formData.honorario} onChange={(value) => setFormData({ ...formData, honorario: value })} required />
-              <CurrencyInput label="13º Salário" value={formData.decimoTerceiro} onChange={(value) => setFormData({ ...formData, decimoTerceiro: value })} />
-              <CurrencyInput label="Taxa de Registro" value={formData.registro} onChange={(value) => setFormData({ ...formData, registro: value })} />
-              <CurrencyInput label="Alteração Contratual" value={formData.alteracao} onChange={(value) => setFormData({ ...formData, alteracao: value })} />
-              <CurrencyInput label="Material Expediente" value={MATERIAL_EXPEDIENTE} disabled />
-              <CurrencyInput label="Outros" value={formData.outros} onChange={(value) => setFormData({ ...formData, outros: value })} />
-            </div>
-          </div>
-          <div>
-            <label className="flex flex-col gap-2">
-              <span className="text-[var(--text-primary)] text-[15px] font-medium">Detalhamento (Opcional)</span>
-              <textarea value={formData.detalhamento} onChange={(e) => setFormData({ ...formData, detalhamento: e.target.value })}
-                className="flex w-full rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] border border-[var(--border-primary)] bg-[var(--surface-primary)] focus:border-[#00AEEF] min-h-[100px] p-4 text-[16px] font-normal transition-all resize-none"
-                placeholder="Adicione observações sobre os valores cobrados..." />
-            </label>
-          </div>
-          <div className="bg-[rgba(0,174,239,0.08)] border border-[rgba(0,174,239,0.2)] rounded-2xl p-6 flex flex-col items-center justify-center gap-2 mt-4">
-            <span className="text-[var(--text-tertiary)] text-[13px] uppercase tracking-wide font-semibold">Valor Total a Receber</span>
-            <div className="text-[36px] font-bold text-[#00AEEF] flex items-baseline gap-1">
-              <span className="text-[24px] font-medium opacity-80">R$</span>
-              {total.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-          </div>
-        </form>
-      </Drawer>
+      {/* Create/Edit Wizard */}
+      <ReciboWizard
+        isOpen={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onSuccess={fetchRecibos}
+        clientes={clientes}
+        editingRecibo={editingRecibo}
+      />
+
+      {/* Preview Modal */}
+      <ReciboPreviewModal
+        isOpen={!!previewRecibo}
+        onClose={() => setPreviewRecibo(null)}
+        recibo={previewRecibo}
+        onEdit={(r) => { setPreviewRecibo(null); openEditWizard(r); }}
+        onSendEmail={(r) => { setPreviewRecibo(null); openEmailModal(r); }}
+      />
 
       {/* Delete Modal */}
       {deleteConfirm && (
