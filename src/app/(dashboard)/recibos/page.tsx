@@ -450,7 +450,7 @@ export default function RecibosPage() {
                         <tr key={recibo.id} onClick={() => setPreviewRecibo(recibo)} className="group hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer">
                           <td className="px-6 py-3">
                             <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center size-8 rounded-full bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-semibold text-[11px]">
+                              <div className="flex items-center justify-center size-10 rounded-xl bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-bold text-[12px]">
                                 {recibo.cliente ? getInitials(recibo.cliente.nome) : "??"}
                               </div>
                               <span className="text-[var(--text-primary)] font-medium text-[13px]">

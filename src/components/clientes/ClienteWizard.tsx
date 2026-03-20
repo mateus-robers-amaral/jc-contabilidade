@@ -49,6 +49,13 @@ const steps = [
   { title: "Revisão", icon: "checklist" },
 ];
 
+const stepDescriptions = [
+  "Informe o documento do cliente",
+  "Dados de identificação do cliente",
+  "Informações de contato e valores",
+  "Confira os dados antes de salvar",
+];
+
 export default function ClienteWizard({
   isOpen,
   onClose,
@@ -214,12 +221,23 @@ export default function ClienteWizard({
   };
 
   const renderStepper = () => (
-    <div className="flex items-center justify-between mb-8 px-2">
-      {steps.map((s, i) => (
-        <div key={i} className="flex items-center flex-1 last:flex-none">
-          <div className="flex flex-col items-center gap-2">
-            <div
-              className={`flex items-center justify-center size-10 rounded-full text-[14px] font-bold transition-colors ${
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-3">
+        {steps.map((s, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => i < step && setStep(i)}
+            className={`flex items-center gap-2 text-[13px] font-medium transition-colors ${
+              i === step
+                ? "text-[#00AEEF]"
+                : i < step
+                ? "text-[#34C759] cursor-pointer"
+                : "text-[var(--text-tertiary)]"
+            }`}
+          >
+            <span
+              className={`flex items-center justify-center size-7 rounded-full text-[11px] font-bold ${
                 i < step
                   ? "bg-[#34C759] text-white"
                   : i === step
@@ -228,28 +246,39 @@ export default function ClienteWizard({
               }`}
             >
               {i < step ? (
-                <span className="material-symbols-outlined text-[20px]">check</span>
+                <span className="material-symbols-outlined text-[14px]">check</span>
               ) : (
                 i + 1
               )}
-            </div>
-            <span
-              className={`text-[12px] font-medium whitespace-nowrap ${
-                i <= step ? "text-[var(--text-primary)]" : "text-[var(--text-tertiary)]"
-              }`}
-            >
-              {s.title}
             </span>
-          </div>
-          {i < steps.length - 1 && (
-            <div
-              className={`flex-1 h-[2px] mx-3 mt-[-24px] rounded-full transition-colors ${
-                i < step ? "bg-[#34C759]" : "bg-[var(--bg-tertiary)]"
-              }`}
-            />
-          )}
-        </div>
-      ))}
+            <span className="hidden sm:inline">{s.title}</span>
+          </button>
+        ))}
+      </div>
+      <div className="h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+        <div
+          className="h-full bg-[#00AEEF] rounded-full transition-all duration-300"
+          style={{ width: `${(step / (steps.length - 1)) * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+
+  const renderStepHeader = () => (
+    <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(0,174,239,0.1)]">
+        <span className="material-symbols-outlined text-[#00AEEF] text-[20px]">
+          {steps[step].icon}
+        </span>
+      </div>
+      <div>
+        <h3 className="text-[var(--text-primary)] text-[16px] font-semibold">
+          {steps[step].title}
+        </h3>
+        <p className="text-[var(--text-tertiary)] text-[13px]">
+          {stepDescriptions[step]}
+        </p>
+      </div>
     </div>
   );
 
@@ -259,29 +288,27 @@ export default function ClienteWizard({
         <label className="text-[var(--text-primary)] text-[15px] font-medium block mb-3">
           Tipo de Documento
         </label>
-        <div className="flex rounded-lg overflow-hidden border border-[var(--border-primary)]">
-          <button
-            type="button"
-            onClick={() => handleDocTypeChange("cpf")}
-            className={`px-4 py-2 text-[13px] font-semibold transition-colors ${
-              docType === "cpf"
-                ? "bg-[#00AEEF] text-white"
-                : "bg-[var(--surface-primary)] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]"
-            }`}
-          >
-            CPF
-          </button>
-          <button
-            type="button"
-            onClick={() => handleDocTypeChange("cnpj")}
-            className={`px-4 py-2 text-[13px] font-semibold transition-colors ${
-              docType === "cnpj"
-                ? "bg-[#00AEEF] text-white"
-                : "bg-[var(--surface-primary)] text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]"
-            }`}
-          >
-            CNPJ
-          </button>
+        <div className="grid grid-cols-2 gap-3">
+          {(["cpf", "cnpj"] as const).map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => handleDocTypeChange(type)}
+              className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                docType === type
+                  ? "border-[#00AEEF] bg-[rgba(0,174,239,0.05)]"
+                  : "border-[var(--border-primary)] hover:border-[var(--text-tertiary)]"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[24px]">
+                {type === "cpf" ? "person" : "business"}
+              </span>
+              <span className="text-[14px] font-semibold">{type.toUpperCase()}</span>
+              <span className="text-[12px] text-[var(--text-tertiary)]">
+                {type === "cpf" ? "Pessoa Fisica" : "Pessoa Juridica"}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -360,74 +387,85 @@ export default function ClienteWizard({
 
   const renderStep3 = () => (
     <div className="space-y-4">
-      {/* Documento */}
-      <div className="rounded-xl bg-[var(--bg-tertiary)] p-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Documento
-          </span>
+      <div className="rounded-2xl border border-[var(--border-primary)] overflow-hidden">
+        {/* Section 1 - Documento */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-primary)]">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-[var(--text-tertiary)] text-[20px]">badge</span>
+            <div>
+              <p className="text-[12px] text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
+                Documento
+              </p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-[#00AEEF] text-white uppercase">
+                  {docType}
+                </span>
+                <span className="text-[14px] font-medium text-[var(--text-primary)] font-mono">
+                  {docValue}
+                </span>
+              </div>
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => setStep(0)}
-            className="flex items-center justify-center size-7 rounded-lg hover:bg-[var(--surface-primary)] text-[var(--text-tertiary)] hover:text-[#00AEEF] transition-colors"
+            className="flex items-center justify-center size-8 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[#00AEEF] transition-colors"
           >
             <span className="material-symbols-outlined text-[16px]">edit</span>
           </button>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#00AEEF] text-white uppercase">
-            {docType}
-          </span>
-          <span className="text-[15px] font-medium text-[var(--text-primary)] font-mono">
-            {docValue}
-          </span>
-        </div>
-      </div>
 
-      {/* Identificação */}
-      <div className="rounded-xl bg-[var(--bg-tertiary)] p-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Identificação
-          </span>
+        {/* Section 2 - Identificação */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-primary)]">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-[var(--text-tertiary)] text-[20px]">person</span>
+            <div>
+              <p className="text-[12px] text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
+                Identificação
+              </p>
+              <p className="text-[14px] font-medium text-[var(--text-primary)] mt-0.5">{nome}</p>
+              {responsavel && (
+                <p className="text-[13px] text-[var(--text-secondary)] mt-0.5">
+                  Responsável: {responsavel}
+                </p>
+              )}
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => setStep(1)}
-            className="flex items-center justify-center size-7 rounded-lg hover:bg-[var(--surface-primary)] text-[var(--text-tertiary)] hover:text-[#00AEEF] transition-colors"
+            className="flex items-center justify-center size-8 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[#00AEEF] transition-colors"
           >
             <span className="material-symbols-outlined text-[16px]">edit</span>
           </button>
         </div>
-        <p className="text-[15px] font-medium text-[var(--text-primary)]">{nome}</p>
-        {responsavel && (
-          <p className="text-[13px] text-[var(--text-secondary)] mt-1">
-            Responsável: {responsavel}
-          </p>
-        )}
-      </div>
 
-      {/* Contato e Valores */}
-      <div className="rounded-xl bg-[var(--bg-tertiary)] p-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Contato e Valores
-          </span>
+        {/* Section 3 - Contato e Valores */}
+        <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-[var(--text-tertiary)] text-[20px]">mail</span>
+            <div>
+              <p className="text-[12px] text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
+                Contato e Valores
+              </p>
+              <p className="text-[14px] text-[var(--text-primary)] mt-0.5">
+                {email || <span className="text-[var(--text-tertiary)] italic">Nenhum e-mail informado</span>}
+              </p>
+              {honorarioPadrao > 0 && (
+                <p className="text-[13px] text-[var(--text-secondary)] mt-0.5">
+                  Honorário padrão: R$ {honorarioPadrao.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </p>
+              )}
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => setStep(2)}
-            className="flex items-center justify-center size-7 rounded-lg hover:bg-[var(--surface-primary)] text-[var(--text-tertiary)] hover:text-[#00AEEF] transition-colors"
+            className="flex items-center justify-center size-8 rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[#00AEEF] transition-colors"
           >
             <span className="material-symbols-outlined text-[16px]">edit</span>
           </button>
         </div>
-        <p className="text-[15px] text-[var(--text-primary)]">
-          {email || <span className="text-[var(--text-tertiary)] italic">Nenhum e-mail informado</span>}
-        </p>
-        {honorarioPadrao > 0 && (
-          <p className="text-[13px] text-[var(--text-secondary)] mt-1">
-            Honorário padrão: R$ {honorarioPadrao.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-          </p>
-        )}
       </div>
 
       {formError && (
@@ -463,7 +501,11 @@ export default function ClienteWizard({
       size="lg"
     >
       {renderStepper()}
-      {renderCurrentStep()}
+
+      <div className="min-h-[280px]">
+        {renderStepHeader()}
+        {renderCurrentStep()}
+      </div>
 
       {/* Navigation Footer */}
       <div className="flex items-center justify-between gap-3 pt-6 mt-6 border-t border-[var(--border-primary)]">
@@ -477,28 +519,30 @@ export default function ClienteWizard({
           Voltar
         </Button>
 
-        <div className="flex items-center gap-3">
-          {step < steps.length - 1 ? (
-            <Button
-              type="button"
-              onClick={handleNext}
-              disabled={!canProceed()}
-              icon="arrow_forward"
-              iconPosition="right"
-            >
-              Próximo
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              loading={submitting}
-              icon={editingCliente ? "save" : "add"}
-            >
-              {editingCliente ? "Atualizar" : "Cadastrar"}
-            </Button>
-          )}
-        </div>
+        <span className="text-[var(--text-tertiary)] text-[13px] font-medium">
+          {step + 1} de {steps.length}
+        </span>
+
+        {step < steps.length - 1 ? (
+          <Button
+            type="button"
+            onClick={handleNext}
+            disabled={!canProceed()}
+            icon="arrow_forward"
+            iconPosition="right"
+          >
+            Próximo
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            loading={submitting}
+            icon={editingCliente ? "save" : "check"}
+          >
+            {editingCliente ? "Atualizar" : "Cadastrar"}
+          </Button>
+        )}
       </div>
     </Modal>
   );

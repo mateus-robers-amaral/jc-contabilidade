@@ -407,7 +407,7 @@ export default function ConfiguraçõesPage() {
                   className="flex items-center justify-between p-4 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-2xl shadow-sm hover:shadow-md transition-all"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center size-11 rounded-full bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-semibold text-[13px]">
+                    <div className="flex items-center justify-center size-12 rounded-xl bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-bold text-[14px]">
                       {user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
                     </div>
                     <div>

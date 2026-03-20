@@ -239,7 +239,7 @@ export default function DashboardPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center size-9 rounded-full bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-semibold text-[12px]">
+                          <div className="flex items-center justify-center size-11 rounded-xl bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-bold text-[13px]">
                             {getInitials(recibo.cliente.nome)}
                           </div>
                           <span className="text-[var(--text-primary)] text-[14px] font-medium">

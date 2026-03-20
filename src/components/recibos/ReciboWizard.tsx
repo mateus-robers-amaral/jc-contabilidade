@@ -13,10 +13,17 @@ const MONTH_NAMES = [
 ];
 
 const steps = [
-  { title: "Cliente", icon: "person" },
-  { title: "Referência", icon: "calendar_month" },
-  { title: "Valores", icon: "payments" },
-  { title: "Revisão", icon: "checklist" },
+  { title: "Cliente", icon: "person", description: "Escolha para quem emitir o recibo" },
+  { title: "Referência", icon: "calendar_month", description: "Período de competência do recibo" },
+  { title: "Valores", icon: "payments", description: "Informe os valores dos serviços" },
+  { title: "Revisão", icon: "checklist", description: "Confira os dados antes de emitir" },
+];
+
+const stepHeaders = [
+  { title: "Selecione o cliente", description: "Escolha para quem emitir o recibo", icon: "person" },
+  { title: "Mês de referência", description: "Período de competência do recibo", icon: "calendar_month" },
+  { title: "Valores do recibo", description: "Informe os valores dos serviços", icon: "payments" },
+  { title: "Revisão final", description: "Confira os dados antes de emitir", icon: "checklist" },
 ];
 
 interface ReciboWizardProps {
@@ -184,48 +191,67 @@ export default function ReciboWizard({
       size="xl"
     >
       {/* Stepper */}
-      <div className="flex items-center gap-2 mb-8">
-        {steps.map((s, i) => (
-          <div key={s.title} className="flex items-center gap-2 flex-1">
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          {steps.map((s, i) => (
             <button
+              key={s.title}
               type="button"
               onClick={() => i < step && setStep(i)}
-              className={`flex items-center justify-center size-10 rounded-xl transition-all duration-200 shrink-0 ${
+              className={`flex items-center gap-2 text-[13px] font-medium transition-colors ${
                 i === step
-                  ? "bg-[#00AEEF] text-white"
+                  ? "text-[#00AEEF]"
                   : i < step
-                    ? "bg-[#34C759] text-white cursor-pointer"
-                    : "bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]"
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">
-                {i < step ? "check" : s.icon}
-              </span>
-            </button>
-            <span
-              className={`text-[13px] font-medium hidden sm:block ${
-                i === step
-                  ? "text-[var(--text-primary)]"
-                  : i < step
-                    ? "text-[#34C759]"
+                    ? "text-[#34C759] cursor-pointer"
                     : "text-[var(--text-tertiary)]"
               }`}
             >
-              {s.title}
-            </span>
-            {i < steps.length - 1 && (
-              <div
-                className={`flex-1 h-[2px] rounded-full mx-1 ${
-                  i < step ? "bg-[#34C759]" : "bg-[var(--border-primary)]"
+              <span
+                className={`flex items-center justify-center size-7 rounded-full text-[11px] font-bold ${
+                  i < step
+                    ? "bg-[#34C759] text-white"
+                    : i === step
+                      ? "bg-[#00AEEF] text-white"
+                      : "bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]"
                 }`}
-              />
-            )}
-          </div>
-        ))}
+              >
+                {i < step ? (
+                  <span className="material-symbols-outlined text-[14px]">check</span>
+                ) : (
+                  i + 1
+                )}
+              </span>
+              <span className="hidden sm:inline">{s.title}</span>
+            </button>
+          ))}
+        </div>
+        <div className="h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[#00AEEF] rounded-full transition-all duration-300"
+            style={{ width: `${(step / (steps.length - 1)) * 100}%` }}
+          />
+        </div>
       </div>
 
       {/* Step Content */}
       <div className="min-h-[280px]">
+        {/* Step Header */}
+        <div className="flex items-center gap-3 mb-5">
+          <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(0,174,239,0.1)]">
+            <span className="material-symbols-outlined text-[#00AEEF] text-[20px]">
+              {stepHeaders[step].icon}
+            </span>
+          </div>
+          <div>
+            <h3 className="text-[var(--text-primary)] text-[16px] font-semibold">
+              {stepHeaders[step].title}
+            </h3>
+            <p className="text-[var(--text-tertiary)] text-[13px]">
+              {stepHeaders[step].description}
+            </p>
+          </div>
+        </div>
+
         {/* Step 0 — Cliente */}
         {step === 0 && (
           <div className="space-y-4">
@@ -251,18 +277,24 @@ export default function ReciboWizard({
             />
 
             {selectedCliente && (
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
-                <div className="flex items-center justify-center size-12 rounded-xl bg-gradient-to-br from-[#00AEEF] to-[#0078A8] text-white text-[15px] font-bold shrink-0">
+              <div className="flex items-center gap-4 p-5 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
+                <div className="flex items-center justify-center size-14 rounded-2xl bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white text-[18px] font-bold shrink-0">
                   {getInitials(selectedCliente.nome)}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[var(--text-primary)] text-[15px] font-semibold truncate">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[var(--text-primary)] text-[16px] font-semibold truncate">
                     {selectedCliente.nome}
                   </p>
-                  <p className="text-[var(--text-tertiary)] text-[13px]">
+                  <p className="text-[var(--text-tertiary)] text-[13px] font-mono">
                     {selectedCliente.cnpj}
                   </p>
+                  {selectedCliente.honorarioPadrao && (
+                    <p className="text-[#00AEEF] text-[13px] font-medium mt-1">
+                      Honorário padrão: {formatCurrency(Number(selectedCliente.honorarioPadrao))}
+                    </p>
+                  )}
                 </div>
+                <span className="material-symbols-outlined text-[#34C759] text-[24px]">check_circle</span>
               </div>
             )}
           </div>
@@ -285,11 +317,11 @@ export default function ReciboWizard({
               />
             </div>
 
-            <div className="flex items-center gap-3 p-5 rounded-2xl bg-[rgba(0,174,239,0.08)] border border-[rgba(0,174,239,0.2)]">
-              <span className="material-symbols-outlined text-[#00AEEF] text-[28px]">
+            <div className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
+              <span className="material-symbols-outlined text-[#00AEEF] text-[48px]">
                 calendar_month
               </span>
-              <span className="text-[var(--text-primary)] text-[20px] font-bold">
+              <span className="text-[var(--text-primary)] text-[24px] font-bold">
                 {formatMonth(formData.mesReferencia)}
               </span>
             </div>
@@ -334,9 +366,13 @@ export default function ReciboWizard({
               />
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-[rgba(0,174,239,0.08)] border border-[rgba(0,174,239,0.2)]">
-              <span className="text-[var(--text-secondary)] text-[15px] font-medium">Total</span>
-              <span className="text-[#00AEEF] text-[24px] font-bold">
+            <div className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-[rgba(0,174,239,0.1)] to-[rgba(46,49,146,0.1)] border border-[rgba(0,174,239,0.2)]">
+              <div>
+                <span className="text-[var(--text-tertiary)] text-[12px] font-semibold uppercase tracking-wider">
+                  Total do Recibo
+                </span>
+              </div>
+              <span className="text-[#00AEEF] text-[28px] font-bold">
                 {formatCurrency(total)}
               </span>
             </div>
@@ -361,85 +397,76 @@ export default function ReciboWizard({
         {/* Step 3 — Revisão */}
         {step === 3 && (
           <div className="space-y-5">
-            {/* Client Info */}
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center size-12 rounded-xl bg-gradient-to-br from-[#00AEEF] to-[#0078A8] text-white text-[15px] font-bold shrink-0">
-                  {selectedCliente ? getInitials(selectedCliente.nome) : "?"}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[var(--text-primary)] text-[15px] font-semibold truncate">
-                    {selectedCliente?.nome}
-                  </p>
-                  <p className="text-[var(--text-tertiary)] text-[13px]">
-                    {selectedCliente?.cnpj}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setStep(0)}
-                className="flex items-center justify-center size-9 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
-              >
-                <span className="material-symbols-outlined text-[18px]">edit</span>
-              </button>
-            </div>
-
-            {/* Reference Month Badge */}
-            <div className="flex items-center justify-between">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[rgba(0,174,239,0.08)] border border-[rgba(0,174,239,0.2)]">
-                <span className="material-symbols-outlined text-[#00AEEF] text-[18px]">
-                  calendar_month
-                </span>
-                <span className="text-[#00AEEF] text-[15px] font-semibold">
-                  {formatMonth(formData.mesReferencia)}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="flex items-center justify-center size-9 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
-              >
-                <span className="material-symbols-outlined text-[18px]">edit</span>
-              </button>
-            </div>
-
-            {/* Values Table */}
+            {/* Unified review card */}
             <div className="rounded-2xl border border-[var(--border-primary)] overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 bg-[var(--bg-tertiary)] border-b border-[var(--border-primary)]">
-                <span className="text-[var(--text-secondary)] text-[13px] font-semibold uppercase tracking-wider">
-                  Valores
-                </span>
+              {/* Client section */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-primary)]">
+                <div className="flex items-center gap-4">
+                  <div className="size-12 rounded-xl bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white flex items-center justify-center text-[14px] font-bold">
+                    {selectedCliente ? getInitials(selectedCliente.nome) : "?"}
+                  </div>
+                  <div>
+                    <p className="text-[var(--text-primary)] text-[15px] font-semibold">
+                      {selectedCliente?.nome}
+                    </p>
+                    <p className="text-[var(--text-tertiary)] text-[12px] font-mono">
+                      {selectedCliente?.cnpj}
+                    </p>
+                  </div>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setStep(2)}
-                  className="flex items-center justify-center size-7 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                  onClick={() => setStep(0)}
+                  className="size-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[#00AEEF] transition-colors"
                 >
                   <span className="material-symbols-outlined text-[16px]">edit</span>
                 </button>
               </div>
+
+              {/* Month section */}
+              <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--border-primary)] bg-[var(--bg-tertiary)]">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#00AEEF] text-[18px]">
+                    calendar_month
+                  </span>
+                  <span className="text-[var(--text-primary)] text-[14px] font-semibold">
+                    {formatMonth(formData.mesReferencia)}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="size-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-secondary)] text-[var(--text-tertiary)] hover:text-[#00AEEF] transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">edit</span>
+                </button>
+              </div>
+
+              {/* Values */}
               <div className="divide-y divide-[var(--border-primary)]">
                 {valueItems
                   .filter((item) => item.value > 0)
                   .map((item) => (
                     <div
                       key={item.label}
-                      className="flex items-center justify-between px-4 py-3"
+                      className="flex items-center justify-between px-5 py-3"
                     >
                       <span className="text-[var(--text-secondary)] text-[14px]">
                         {item.label}
                       </span>
-                      <span className="text-[var(--text-primary)] text-[14px] font-medium">
+                      <span className="text-[var(--text-primary)] text-[14px] font-semibold font-mono">
                         {formatCurrency(item.value)}
                       </span>
                     </div>
                   ))}
               </div>
-              <div className="flex items-center justify-between px-4 py-4 bg-[rgba(0,174,239,0.08)] border-t border-[rgba(0,174,239,0.2)]">
-                <span className="text-[var(--text-secondary)] text-[15px] font-medium">
+
+              {/* Total */}
+              <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[rgba(0,174,239,0.08)] to-[rgba(46,49,146,0.05)]">
+                <span className="text-[var(--text-primary)] text-[15px] font-semibold">
                   Total
                 </span>
-                <span className="text-[#00AEEF] text-[20px] font-bold">
+                <span className="text-[#00AEEF] text-[22px] font-bold">
                   {formatCurrency(total)}
                 </span>
               </div>
@@ -475,7 +502,7 @@ export default function ReciboWizard({
       </div>
 
       {/* Navigation Footer */}
-      <div className="flex items-center justify-between mt-8 pt-5 border-t border-[var(--border-primary)]">
+      <div className="flex items-center justify-between gap-3 pt-6 mt-6 border-t border-[var(--border-primary)]">
         <Button
           variant="secondary"
           onClick={() => setStep((prev) => prev - 1)}
@@ -484,6 +511,10 @@ export default function ReciboWizard({
         >
           Voltar
         </Button>
+
+        <span className="text-[var(--text-tertiary)] text-[13px] font-medium">
+          {step + 1} de {steps.length}
+        </span>
 
         {step < steps.length - 1 ? (
           <Button
