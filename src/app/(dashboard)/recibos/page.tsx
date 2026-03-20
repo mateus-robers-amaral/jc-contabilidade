@@ -46,7 +46,8 @@ export default function RecibosPage() {
 
   // Email state
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
-  const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
+  const [sentEmails, setSentEmails] = useState<Set<string>>(new Set());
+  const [showToast, setShowToast] = useState(false);
   const [emailModal, setEmailModal] = useState<Recibo | null>(null);
   const [emailAssunto, setEmailAssunto] = useState("");
   const [emailMensagem, setEmailMensagem] = useState("");
@@ -294,8 +295,9 @@ export default function RecibosPage() {
       const data: ApiResponse = await res.json();
       if (data.success) {
         setEmailModal(null);
-        setEmailSuccess(reciboId);
-        setTimeout(() => setEmailSuccess(null), 8000);
+        setSentEmails((prev) => new Set(prev).add(reciboId));
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 5000);
       } else { setEmailError(data.error || "Erro ao enviar e-mail"); }
     } catch { setEmailError("Erro ao conectar com o servidor"); }
     finally { setSendingEmail(null); }
@@ -304,7 +306,7 @@ export default function RecibosPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Email Success Toast */}
-      {emailSuccess && (
+      {showToast && (
         <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-5 py-3 rounded-xl bg-[#34C759] text-white text-[14px] font-medium shadow-lg animate-fadeIn">
           <span className="material-symbols-outlined text-[20px]">check_circle</span>
           E-mail enviado com sucesso!
@@ -488,14 +490,24 @@ export default function RecibosPage() {
                               <a href={`/api/recibos/${recibo.id}/pdf`} download className="size-8 rounded-full flex items-center justify-center text-[#00AEEF] hover:bg-[#00AEEF] hover:text-white transition-all" title="Download PDF">
                                 <span className="material-symbols-outlined text-[18px]">download</span>
                               </a>
-                              <button onClick={() => openEmailModal(recibo)} disabled={!!sendingEmail}
-                                className={`size-8 rounded-full flex items-center justify-center transition-all disabled:opacity-50 ${
-                                  emailSuccess === recibo.id ? "text-[#34C759] bg-[rgba(52,199,89,0.1)]" : "text-[var(--text-tertiary)] hover:text-[#5856D6] hover:bg-[rgba(88,86,214,0.1)]"
-                                }`} title={recibo.cliente?.email ? `Enviar para ${recibo.cliente.email}` : "Cliente sem e-mail"}>
-                                <span className="material-symbols-outlined text-[18px]">
-                                  {emailSuccess === recibo.id ? "check_circle" : "mail"}
-                                </span>
-                              </button>
+                              {sentEmails.has(recibo.id) ? (
+                                <>
+                                  <span className="size-8 rounded-full flex items-center justify-center text-[#34C759] bg-[rgba(52,199,89,0.1)]" title="E-mail enviado">
+                                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                                  </span>
+                                  <button onClick={() => openEmailModal(recibo)} disabled={!!sendingEmail}
+                                    className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#5856D6] hover:bg-[rgba(88,86,214,0.1)] transition-all disabled:opacity-50"
+                                    title="Reenviar e-mail">
+                                    <span className="material-symbols-outlined text-[18px]">forward_to_inbox</span>
+                                  </button>
+                                </>
+                              ) : (
+                                <button onClick={() => openEmailModal(recibo)} disabled={!!sendingEmail}
+                                  className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#5856D6] hover:bg-[rgba(88,86,214,0.1)] transition-all disabled:opacity-50"
+                                  title={recibo.cliente?.email ? `Enviar para ${recibo.cliente.email}` : "Cliente sem e-mail"}>
+                                  <span className="material-symbols-outlined text-[18px]">mail</span>
+                                </button>
+                              )}
                               <button onClick={() => setDeleteConfirm(recibo)} className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#FF3B30] hover:bg-[rgba(255,59,48,0.1)] transition-colors" title="Excluir">
                                 <span className="material-symbols-outlined text-[18px]">delete</span>
                               </button>
