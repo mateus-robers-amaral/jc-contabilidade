@@ -51,6 +51,15 @@ export default function RecibosPage() {
   const [emailAssunto, setEmailAssunto] = useState("");
   const [emailMensagem, setEmailMensagem] = useState("");
 
+  // Lote (bulk) state
+  const [loteOpen, setLoteOpen] = useState(false);
+  const [loteMes, setLoteMes] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const [loteLoading, setLoteLoading] = useState(false);
+  const [loteResult, setLoteResult] = useState<{ success: boolean; message: string } | null>(null);
+
   // Relatório state
   const [relatorioOpen, setRelatorioOpen] = useState(false);
   const [availableData, setAvailableData] = useState<{ ano: number; mes: number }[]>([]);
@@ -209,6 +218,29 @@ export default function RecibosPage() {
     fetchRecibos();
   };
 
+  const handleLoteSubmit = async () => {
+    setLoteLoading(true);
+    setLoteResult(null);
+    try {
+      const res = await fetch("/api/recibos/lote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mesReferencia: loteMes }),
+      });
+      const data: ApiResponse = await res.json();
+      if (data.success) {
+        setLoteResult({ success: true, message: data.message || "Recibos criados com sucesso" });
+        fetchRecibos();
+      } else {
+        setLoteResult({ success: false, message: data.error || "Erro ao criar recibos" });
+      }
+    } catch {
+      setLoteResult({ success: false, message: "Erro ao conectar com o servidor" });
+    } finally {
+      setLoteLoading(false);
+    }
+  };
+
   const openNewWizard = () => {
     setEditingRecibo(null);
     setWizardOpen(true);
@@ -285,6 +317,7 @@ export default function RecibosPage() {
             <span className="material-symbols-outlined text-[20px]">download</span>
             <span>Relatório</span>
           </button>
+          <Button onClick={() => { setLoteResult(null); setLoteOpen(true); }} icon="group" variant="secondary">Emitir para Todos</Button>
           <Button onClick={openNewWizard} icon="add">Novo Recibo</Button>
         </div>
       </div>
@@ -529,6 +562,58 @@ export default function RecibosPage() {
             <Button type="button" className="flex-1" disabled={!!sendingEmail} loading={!!sendingEmail} icon={sendingEmail ? undefined : "send"} onClick={handleSendEmail}>
               {sendingEmail ? "Enviando..." : "Enviar E-mail"}
             </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Bulk Create Modal */}
+      <Modal
+        isOpen={loteOpen}
+        onClose={() => setLoteOpen(false)}
+        title="Emitir Recibos para Todos"
+        description="Cria recibos para todos os clientes que possuem honorário padrão cadastrado"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[var(--text-primary)] text-[15px] font-medium mb-2">
+              Mês de referência
+            </label>
+            <input
+              type="month"
+              value={loteMes}
+              onChange={(e) => setLoteMes(e.target.value)}
+              className="w-full h-[52px] bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 text-[var(--text-primary)] text-[15px] font-medium focus:outline-none focus:border-[#00AEEF] focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] transition-all"
+            />
+          </div>
+
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-[rgba(0,174,239,0.08)] border border-[rgba(0,174,239,0.15)] text-[14px] text-[var(--text-secondary)]">
+            <span className="material-symbols-outlined text-[#00AEEF] text-[20px] mt-0.5">info</span>
+            <span>Apenas clientes com <strong>honorário padrão</strong> cadastrado serão incluídos. Clientes que já possuem recibo no mês selecionado serão ignorados.</span>
+          </div>
+
+          {loteResult && (
+            <div className={`flex items-center gap-3 p-4 rounded-xl text-[14px] ${
+              loteResult.success
+                ? "bg-[rgba(52,199,89,0.1)] border border-[rgba(52,199,89,0.2)] text-[#34C759]"
+                : "bg-[rgba(255,59,48,0.1)] border border-[rgba(255,59,48,0.2)] text-[#FF3B30]"
+            }`}>
+              <span className="material-symbols-outlined text-[20px]">
+                {loteResult.success ? "check_circle" : "error"}
+              </span>
+              {loteResult.message}
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <Button variant="secondary" className="flex-1" onClick={() => setLoteOpen(false)}>
+              {loteResult?.success ? "Fechar" : "Cancelar"}
+            </Button>
+            {!loteResult?.success && (
+              <Button className="flex-1" onClick={handleLoteSubmit} loading={loteLoading} icon="receipt_long">
+                Emitir Recibos
+              </Button>
+            )}
           </div>
         </div>
       </Modal>

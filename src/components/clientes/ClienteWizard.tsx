@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Button, Input, Modal } from "@/components/ui";
+import { Button, Input, CurrencyInput, Modal } from "@/components/ui";
 
 type DocType = "cpf" | "cnpj";
 
@@ -15,6 +15,7 @@ interface ClienteWizardProps {
     cnpj: string;
     email: string | null;
     responsavel: string | null;
+    honorarioPadrao: number | null;
   } | null;
 }
 
@@ -44,7 +45,7 @@ function maskCPF(value: string): string {
 const steps = [
   { title: "Documento", icon: "badge" },
   { title: "Identificação", icon: "person" },
-  { title: "Contato", icon: "mail" },
+  { title: "Contato e Valores", icon: "mail" },
   { title: "Revisão", icon: "checklist" },
 ];
 
@@ -60,6 +61,7 @@ export default function ClienteWizard({
   const [nome, setNome] = useState("");
   const [responsavel, setResponsavel] = useState("");
   const [email, setEmail] = useState("");
+  const [honorarioPadrao, setHonorarioPadrao] = useState(0);
   const [cnpjLoading, setCnpjLoading] = useState(false);
   const [cnpjStatus, setCnpjStatus] = useState<"idle" | "found" | "not_found" | "error">("idle");
   const [submitting, setSubmitting] = useState(false);
@@ -78,6 +80,7 @@ export default function ClienteWizard({
         setNome(editingCliente.nome);
         setResponsavel(editingCliente.responsavel || "");
         setEmail(editingCliente.email || "");
+        setHonorarioPadrao(editingCliente.honorarioPadrao ? Number(editingCliente.honorarioPadrao) : 0);
         lastFetchedCnpj.current = digits;
         setCnpjStatus("idle");
       } else {
@@ -86,6 +89,7 @@ export default function ClienteWizard({
         setNome("");
         setResponsavel("");
         setEmail("");
+        setHonorarioPadrao(0);
         setCnpjStatus("idle");
         lastFetchedCnpj.current = "";
       }
@@ -189,6 +193,7 @@ export default function ClienteWizard({
           cnpj: digits,
           email: email.trim() || "",
           responsavel: responsavel.trim() || "",
+          honorarioPadrao: honorarioPadrao > 0 ? honorarioPadrao : null,
         }),
       });
 
@@ -340,6 +345,16 @@ export default function ClienteWizard({
         onChange={(e) => setEmail(e.target.value)}
         icon="mail"
       />
+      <div>
+        <CurrencyInput
+          label="Honorário Padrão Mensal"
+          value={honorarioPadrao}
+          onChange={(val) => setHonorarioPadrao(val)}
+        />
+        <p className="text-[var(--text-tertiary)] text-[12px] mt-1.5 ml-1">
+          Valor pré-preenchido ao criar recibos. Também usado na emissão em lote.
+        </p>
+      </div>
     </div>
   );
 
@@ -391,11 +406,11 @@ export default function ClienteWizard({
         )}
       </div>
 
-      {/* Contato */}
+      {/* Contato e Valores */}
       <div className="rounded-xl bg-[var(--bg-tertiary)] p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-            Contato
+            Contato e Valores
           </span>
           <button
             type="button"
@@ -408,6 +423,11 @@ export default function ClienteWizard({
         <p className="text-[15px] text-[var(--text-primary)]">
           {email || <span className="text-[var(--text-tertiary)] italic">Nenhum e-mail informado</span>}
         </p>
+        {honorarioPadrao > 0 && (
+          <p className="text-[13px] text-[var(--text-secondary)] mt-1">
+            Honorário padrão: R$ {honorarioPadrao.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+          </p>
+        )}
       </div>
 
       {formError && (

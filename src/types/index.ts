@@ -13,6 +13,7 @@ export interface Cliente {
   cnpj: string;
   email: string | null;
   responsavel: string | null;
+  honorarioPadrao: number | null;
   createdAt: Date;
   updatedAt: Date;
   recibos?: Recibo[];
@@ -46,6 +47,7 @@ export interface CreateClienteDTO {
   cnpj: string;
   email?: string;
   responsavel?: string;
+  honorarioPadrao?: number;
 }
 
 export interface UpdateClienteDTO {
@@ -53,6 +55,7 @@ export interface UpdateClienteDTO {
   cnpj?: string;
   email?: string;
   responsavel?: string;
+  honorarioPadrao?: number;
 }
 
 export interface CreateReciboDTO {

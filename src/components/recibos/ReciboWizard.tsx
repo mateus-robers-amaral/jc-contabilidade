@@ -237,7 +237,15 @@ export default function ReciboWizard({
                 sublabel: c.cnpj,
               }))}
               value={clienteId}
-              onChange={(val) => setClienteId(val)}
+              onChange={(val) => {
+                setClienteId(val);
+                if (!isEditing) {
+                  const cliente = clientes.find((c) => c.id === val);
+                  if (cliente?.honorarioPadrao) {
+                    setFormData((prev) => ({ ...prev, honorario: Number(cliente.honorarioPadrao) }));
+                  }
+                }
+              }}
               searchPlaceholder="Buscar por nome ou documento..."
               required
             />

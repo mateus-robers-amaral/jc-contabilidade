@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body: CreateClienteDTO = await request.json();
-    const { nome, cnpj, email, responsavel } = body;
+    const { nome, cnpj, email, responsavel, honorarioPadrao } = body;
 
     if (!nome || !cnpj) {
       return NextResponse.json<ApiResponse>(
@@ -157,6 +157,7 @@ export async function POST(request: NextRequest) {
         cnpj: cleanedCNPJ,
         email: email || null,
         responsavel: responsavel || null,
+        honorarioPadrao: honorarioPadrao ? Number(honorarioPadrao) : null,
       },
     });
 
