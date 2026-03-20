@@ -297,7 +297,6 @@ export default function RecibosPage() {
         setEmailModal(null);
         setSentEmails((prev) => new Set(prev).add(reciboId));
         setShowToast(true);
-        setTimeout(() => setShowToast(false), 5000);
       } else { setEmailError(data.error || "Erro ao enviar e-mail"); }
     } catch { setEmailError("Erro ao conectar com o servidor"); }
     finally { setSendingEmail(null); }
@@ -310,6 +309,9 @@ export default function RecibosPage() {
         <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-5 py-3 rounded-xl bg-[#34C759] text-white text-[14px] font-medium shadow-lg animate-fadeIn">
           <span className="material-symbols-outlined text-[20px]">check_circle</span>
           E-mail enviado com sucesso!
+          <button onClick={() => setShowToast(false)} className="ml-1 hover:opacity-80">
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </button>
         </div>
       )}
 
