@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useState, useEffect } from "react";
+import { forwardRef, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface CurrencyInputProps {
@@ -14,7 +14,11 @@ interface CurrencyInputProps {
   className?: string;
 }
 
-function formatCents(cents: number): string {
+function valueToCents(value: number): number {
+  return Math.round(value * 100);
+}
+
+function formatFromCents(cents: number): string {
   const reais = Math.floor(cents / 100);
   const centavos = cents % 100;
   const reaisStr = reais.toLocaleString("pt-BR");
@@ -35,27 +39,21 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
     },
     ref
   ) => {
-    const [cents, setCents] = useState(Math.round(value * 100));
-    const [isFocused, setIsFocused] = useState(false);
+    const focusedRef = useRef(false);
 
-    useEffect(() => {
-      setCents(Math.round(value * 100));
-    }, [value]);
+    // Derive display directly from value prop — single source of truth
+    const cents = valueToCents(value);
+    const displayValue = cents === 0 && !focusedRef.current ? "" : formatFromCents(cents);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      // Extract only digits
       const digits = e.target.value.replace(/\D/g, "");
       const newCents = parseInt(digits, 10) || 0;
-      setCents(newCents);
       onChange?.(newCents / 100);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      // Allow: backspace, delete, tab, escape, enter, arrows
       if (["Backspace", "Delete", "Tab", "Escape", "Enter", "ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
-      // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
       if ((e.ctrlKey || e.metaKey) && ["a", "c", "v", "x"].includes(e.key.toLowerCase())) return;
-      // Block non-digit
       if (!/^\d$/.test(e.key)) {
         e.preventDefault();
       }
@@ -75,7 +73,7 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
         <div className="relative">
           <span className={cn(
             "absolute left-4 top-1/2 -translate-y-1/2 text-[15px] font-medium transition-colors duration-200",
-            isFocused ? "text-[#00AEEF]" : "text-[var(--text-tertiary)]"
+            focusedRef.current ? "text-[#00AEEF]" : "text-[var(--text-tertiary)]"
           )}>
             R$
           </span>
@@ -83,11 +81,11 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
             ref={ref}
             type="text"
             inputMode="numeric"
-            value={cents === 0 && !isFocused ? "" : formatCents(cents)}
+            value={displayValue}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onFocus={() => { focusedRef.current = true; }}
+            onBlur={() => { focusedRef.current = false; }}
             disabled={disabled}
             placeholder={placeholder}
             className={cn(
