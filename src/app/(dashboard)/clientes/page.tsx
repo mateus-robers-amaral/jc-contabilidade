@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button, Input, Modal, Pagination } from "@/components/ui";
-import { formatCNPJ, parseCNPJ, getInitials } from "@/lib/utils";
-import type { Cliente, PaginatedResponse, ApiResponse } from "@/types";
+import { formatCNPJ, parseCNPJ, getInitials, formatCurrency } from "@/lib/utils";
+import type { ClienteWithStats, PaginatedResponse, ApiResponse } from "@/types";
 
 type DocType = "cnpj" | "cpf";
 
@@ -37,8 +37,18 @@ function formatDoc(value: string): string {
   return maskCNPJ(value);
 }
 
+const SORT_OPTIONS = [
+  { value: "createdAt-desc", label: "Mais recentes" },
+  { value: "createdAt-asc", label: "Mais antigos" },
+  { value: "nome-asc", label: "Nome (A-Z)" },
+  { value: "nome-desc", label: "Nome (Z-A)" },
+  { value: "totalRecibos-desc", label: "Maior faturamento" },
+  { value: "totalRecibos-asc", label: "Menor faturamento" },
+  { value: "recibosCount-desc", label: "Mais recibos" },
+];
+
 export default function ClientesPage() {
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [clientes, setClientes] = useState<ClienteWithStats[]>([]);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -47,9 +57,10 @@ export default function ClientesPage() {
   });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [sortValue, setSortValue] = useState("createdAt-desc");
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingCliente, setEditingCliente] = useState<Cliente | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<Cliente | null>(null);
+  const [editingCliente, setEditingCliente] = useState<ClienteWithStats | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<ClienteWithStats | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -68,14 +79,17 @@ export default function ClientesPage() {
   const fetchClientes = useCallback(async () => {
     setLoading(true);
     try {
+      const [sortBy, sortOrder] = sortValue.split("-");
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
+        sortBy,
+        sortOrder,
       });
       if (search) params.append("search", search);
 
       const res = await fetch(`/api/clientes?${params}`);
-      const data: ApiResponse<PaginatedResponse<Cliente>> = await res.json();
+      const data: ApiResponse<PaginatedResponse<ClienteWithStats>> = await res.json();
 
       if (data.success && data.data) {
         setClientes(data.data.data);
@@ -86,7 +100,7 @@ export default function ClientesPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, search]);
+  }, [pagination.page, pagination.limit, search, sortValue]);
 
   useEffect(() => {
     fetchClientes();
@@ -154,7 +168,7 @@ export default function ClientesPage() {
     setModalOpen(true);
   };
 
-  const openEditModal = (cliente: Cliente) => {
+  const openEditModal = (cliente: ClienteWithStats) => {
     setEditingCliente(cliente);
     const digits = parseCNPJ(cliente.cnpj);
     const type: DocType = digits.length <= 11 ? "cpf" : "cnpj";
@@ -259,6 +273,28 @@ export default function ClientesPage() {
             />
           </div>
         </div>
+        <div className="relative flex items-center h-12 min-w-[200px] rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] focus-within:border-[#00AEEF] focus-within:ring-4 focus-within:ring-[rgba(0,174,239,0.15)] transition-all">
+          <div className="absolute left-4 text-[var(--text-tertiary)] flex items-center justify-center pointer-events-none">
+            <span className="material-symbols-outlined text-[20px]">sort</span>
+          </div>
+          <select
+            value={sortValue}
+            onChange={(e) => {
+              setSortValue(e.target.value);
+              setPagination((prev) => ({ ...prev, page: 1 }));
+            }}
+            className="w-full h-full bg-transparent pl-11 pr-4 rounded-xl text-[var(--text-primary)] focus:outline-none text-[14px] font-normal appearance-none cursor-pointer"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <div className="absolute right-3 text-[var(--text-tertiary)] pointer-events-none">
+            <span className="material-symbols-outlined text-[18px]">expand_more</span>
+          </div>
+        </div>
         <Button type="submit" variant="secondary" size="sm">
           Buscar
         </Button>
@@ -270,13 +306,16 @@ export default function ClientesPage() {
           <table className="w-full min-w-[700px]">
             <thead>
               <tr className="border-b border-[var(--border-primary)] bg-[var(--bg-secondary)]">
-                <th className="px-6 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] w-2/5">
+                <th className="px-6 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] w-[30%]">
                   Empresa
                 </th>
-                <th className="px-6 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] w-2/5">
+                <th className="px-6 py-4 text-left text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] w-[25%]">
                   CPF/CNPJ
                 </th>
-                <th className="px-6 py-4 text-right text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] w-1/5">
+                <th className="px-6 py-4 text-right text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] w-[25%]">
+                  Faturamento
+                </th>
+                <th className="px-6 py-4 text-right text-[12px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] w-[20%]">
                   Ações
                 </th>
               </tr>
@@ -284,7 +323,7 @@ export default function ClientesPage() {
             <tbody className="divide-y divide-[var(--border-secondary)]">
               {loading ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-16 text-center">
+                  <td colSpan={4} className="px-6 py-16 text-center">
                     <span className="material-symbols-outlined animate-spin text-[#00AEEF] text-[32px]">
                       progress_activity
                     </span>
@@ -292,7 +331,7 @@ export default function ClientesPage() {
                 </tr>
               ) : clientes.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-16 text-center">
+                  <td colSpan={4} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="size-16 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center">
                         <span className="material-symbols-outlined text-[32px] text-[var(--text-quaternary)]">
@@ -331,6 +370,16 @@ export default function ClientesPage() {
                       <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-[13px] font-medium bg-[var(--bg-tertiary)] text-[var(--text-secondary)] font-mono">
                         {formatDoc(cliente.cnpj)}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex flex-col items-end">
+                        <span className="text-[14px] font-semibold text-[var(--text-primary)]">
+                          {formatCurrency(cliente.totalFaturamento ?? 0)}
+                        </span>
+                        <span className="text-[12px] text-[var(--text-tertiary)]">
+                          {cliente.recibosCount ?? 0} {(cliente.recibosCount ?? 0) === 1 ? "recibo" : "recibos"}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">

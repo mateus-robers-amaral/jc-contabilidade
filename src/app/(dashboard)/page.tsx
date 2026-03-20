@@ -113,10 +113,6 @@ export default async function DashboardPage() {
                   {stat.icon}
                 </span>
               </div>
-              <div className="flex items-center gap-1 text-[#34C759] text-[13px] font-medium">
-                <span className="material-symbols-outlined text-[16px]">trending_up</span>
-                <span>+12%</span>
-              </div>
             </div>
             <p className="text-[var(--text-tertiary)] text-[13px] font-medium mb-1">
               {stat.label}

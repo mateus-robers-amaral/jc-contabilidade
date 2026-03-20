@@ -36,6 +36,11 @@ export interface Recibo {
   updatedAt: Date;
 }
 
+export interface ClienteWithStats extends Cliente {
+  totalFaturamento: number;
+  recibosCount: number;
+}
+
 export interface CreateClienteDTO {
   nome: string;
   cnpj: string;
