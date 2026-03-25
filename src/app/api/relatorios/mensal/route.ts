@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: {
-        cliente: { nome: "asc" },
+        createdAt: "asc",
       },
       include: {
         cliente: {
@@ -67,8 +67,9 @@ export async function GET(request: NextRequest) {
     // Map recibos to PDF format
     const reciboItems = recibos.map((r) => ({
       id: r.id,
-      clienteNome: r.cliente.nome,
-      clienteCnpj: r.cliente.cnpj,
+      clienteNome: r.cliente?.nome || r.avulsoNome || "Avulso",
+      clienteCnpj: r.cliente?.cnpj || r.avulsoCnpj || "",
+      isAvulso: !r.clienteId,
       honorario: Number(r.honorario),
       decimoTerceiro: Number(r.decimoTerceiro),
       registro: Number(r.registro),
@@ -77,6 +78,7 @@ export async function GET(request: NextRequest) {
       outros: Number(r.outros),
       total: Number(r.total),
       status: r.status,
+      dataPagamento: r.dataPagamento ? r.dataPagamento.toISOString() : null,
     }));
 
     // Calculate totals

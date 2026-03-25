@@ -21,8 +21,10 @@ export interface Cliente {
 
 export interface Recibo {
   id: string;
-  clienteId: string;
+  clienteId: string | null;
   cliente?: Cliente;
+  avulsoNome: string | null;
+  avulsoCnpj: string | null;
   mesReferencia: Date;
   honorario: number;
   decimoTerceiro: number;
@@ -33,6 +35,7 @@ export interface Recibo {
   detalhamento: string | null;
   total: number;
   status: "pendente" | "pago" | "cancelado";
+  dataPagamento: Date | null;
   emailEnviadoEm: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -60,7 +63,9 @@ export interface UpdateClienteDTO {
 }
 
 export interface CreateReciboDTO {
-  clienteId: string;
+  clienteId?: string;
+  avulsoNome?: string;
+  avulsoCnpj?: string;
   mesReferencia: string;
   honorario: number;
   decimoTerceiro?: number;

@@ -423,12 +423,14 @@ interface ReciboPDFProps {
     total: number;
     detalhamento: string | null;
     createdAt: Date;
-    cliente: {
+    cliente?: {
       nome: string;
       cnpj: string;
       email: string | null;
       responsavel: string | null;
-    };
+    } | null;
+    avulsoNome?: string | null;
+    avulsoCnpj?: string | null;
   };
   logoSrc?: string | null;
   qrCodeSrc?: string | null;
@@ -492,7 +494,9 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsap
     { description: "Outros Servicos", value: Number(recibo.outros) },
   ].filter((item) => item.value > 0);
 
-  const docInfo = formatDocument(recibo.cliente.cnpj);
+  const clienteNome = recibo.cliente?.nome || recibo.avulsoNome || "Avulso";
+  const clienteCnpj = recibo.cliente?.cnpj || recibo.avulsoCnpj || "";
+  const docInfo = formatDocument(clienteCnpj);
   const totalFormatted = formatCurrency(Number(recibo.total));
 
   return (
@@ -525,13 +529,13 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsap
           <View style={styles.recebemosBox}>
             <View style={styles.recebemosRow}>
               <Text style={styles.recebemosLabel}>RECEBEMOS DE:</Text>
-              <Text style={styles.recebemosValue}>{recibo.cliente.nome}</Text>
+              <Text style={styles.recebemosValue}>{clienteNome}</Text>
             </View>
             <View style={styles.recebemosRow}>
               <Text style={styles.recebemosLabel}>{docInfo.label}:</Text>
               <Text style={styles.recebemosValueNormal}>{docInfo.formatted}</Text>
             </View>
-            {recibo.cliente.responsavel && (
+            {recibo.cliente?.responsavel && (
               <View style={styles.recebemosRow}>
                 <Text style={styles.recebemosLabel}>RESPONSÁVEL:</Text>
                 <Text style={styles.recebemosValueNormal}>{recibo.cliente.responsavel}</Text>

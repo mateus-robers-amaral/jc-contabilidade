@@ -110,6 +110,8 @@ export async function POST(request: NextRequest) {
     const body: CreateReciboDTO = await request.json();
     const {
       clienteId,
+      avulsoNome,
+      avulsoCnpj,
       mesReferencia,
       honorario,
       decimoTerceiro = 0,
@@ -119,23 +121,32 @@ export async function POST(request: NextRequest) {
       detalhamento,
     } = body;
 
-    if (!clienteId || !mesReferencia || honorario === undefined) {
+    const isAvulso = !clienteId;
+
+    if (!mesReferencia || honorario === undefined) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: "Cliente, mes de referencia e honorario sao obrigatorios" },
+        { success: false, error: "Mes de referencia e honorario sao obrigatorios" },
         { status: 400 }
       );
     }
 
-    // Check if cliente exists
-    const cliente = await prisma.cliente.findUnique({
-      where: { id: clienteId },
-    });
-
-    if (!cliente) {
+    if (isAvulso && (!avulsoNome || !avulsoCnpj)) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: "Cliente nao encontrado" },
-        { status: 404 }
+        { success: false, error: "Nome e CPF/CNPJ sao obrigatorios para servico avulso" },
+        { status: 400 }
       );
+    }
+
+    if (!isAvulso) {
+      const cliente = await prisma.cliente.findUnique({
+        where: { id: clienteId },
+      });
+      if (!cliente) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: "Cliente nao encontrado" },
+          { status: 404 }
+        );
+      }
     }
 
     // Calculate total
@@ -152,24 +163,24 @@ export async function POST(request: NextRequest) {
     const [year, month] = mesReferencia.split("-").map(Number);
     const mesReferenciaDate = new Date(year, month - 1, 1);
 
-    // Check for duplicate recibo
-    const existingRecibo = await prisma.recibo.findFirst({
-      where: {
-        clienteId,
-        mesReferencia: mesReferenciaDate,
-      },
-    });
-
-    if (existingRecibo) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: "Ja existe um recibo para este cliente neste mes" },
-        { status: 409 }
-      );
+    // Check for duplicate recibo (only for registered clients)
+    if (!isAvulso) {
+      const existingRecibo = await prisma.recibo.findFirst({
+        where: { clienteId, mesReferencia: mesReferenciaDate },
+      });
+      if (existingRecibo) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: "Ja existe um recibo para este cliente neste mes" },
+          { status: 409 }
+        );
+      }
     }
 
     const recibo = await prisma.recibo.create({
       data: {
-        clienteId,
+        clienteId: isAvulso ? null : clienteId,
+        avulsoNome: isAvulso ? avulsoNome : null,
+        avulsoCnpj: isAvulso ? avulsoCnpj : null,
         mesReferencia: mesReferenciaDate,
         honorario: Number(honorario),
         decimoTerceiro: Number(decimoTerceiro),
@@ -183,11 +194,7 @@ export async function POST(request: NextRequest) {
       },
       include: {
         cliente: {
-          select: {
-            id: true,
-            nome: true,
-            cnpj: true,
-          },
+          select: { id: true, nome: true, cnpj: true },
         },
       },
     });
@@ -196,7 +203,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         data: recibo as unknown as Recibo,
-        message: "Recibo criado com sucesso",
+        message: isAvulso ? "Recibo avulso criado com sucesso" : "Recibo criado com sucesso",
       },
       { status: 201 }
     );

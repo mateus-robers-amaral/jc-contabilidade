@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   // Summary cards
   summaryRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: 8,
     marginBottom: 20,
   },
   summaryCard: {
@@ -82,22 +82,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: BORDER,
     borderRadius: 4,
-    padding: 12,
+    padding: 10,
+    overflow: "hidden",
   },
   summaryLabel: {
-    fontSize: 8,
+    fontSize: 7,
     color: GRAY,
     textTransform: "uppercase",
     letterSpacing: 0.8,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   summaryValue: {
-    fontSize: 16,
+    fontSize: 11,
     fontFamily: "Helvetica-Bold",
     color: DARK,
   },
   summarySubtext: {
-    fontSize: 8,
+    fontSize: 7,
     color: GRAY,
     marginTop: 2,
   },
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
   colHonorario: { flex: 1.2, textAlign: "right" },
   colOutros: { flex: 1.2, textAlign: "right" },
   colTotal: { flex: 1.2, textAlign: "right" },
-  colStatus: { flex: 1, textAlign: "center" },
+  colStatus: { flex: 1.4, textAlign: "center" },
 
   // Totals row
   totalsRow: {
@@ -190,7 +191,7 @@ const styles = StyleSheet.create({
   },
   statusRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: 8,
   },
   statusCard: {
     flex: 1,
@@ -198,16 +199,17 @@ const styles = StyleSheet.create({
     borderColor: BORDER,
     borderRadius: 4,
     padding: 10,
+    overflow: "hidden",
   },
   statusLabel: {
-    fontSize: 8,
+    fontSize: 7,
     color: GRAY,
     textTransform: "uppercase",
     letterSpacing: 0.6,
     marginBottom: 3,
   },
   statusValue: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: "Helvetica-Bold",
     color: DARK,
   },
@@ -251,6 +253,8 @@ interface ReciboItem {
   outros: number;
   total: number;
   status: string;
+  dataPagamento: string | null;
+  isAvulso?: boolean;
 }
 
 interface RelatorioMensalPDFProps {
@@ -285,6 +289,11 @@ function statusLabel(status: string): string {
   if (status === "pago") return "Pago";
   if (status === "cancelado") return "Cancelado";
   return "Pendente";
+}
+
+function formatDate(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("pt-BR");
 }
 
 export default function RelatorioMensalPDF({
@@ -351,7 +360,7 @@ export default function RelatorioMensalPDF({
             <Text style={[styles.tableHeaderText, styles.colHonorario]}>Honorários</Text>
             <Text style={[styles.tableHeaderText, styles.colOutros]}>Outros</Text>
             <Text style={[styles.tableHeaderText, styles.colTotal]}>Total</Text>
-            <Text style={[styles.tableHeaderText, styles.colStatus]}>Status</Text>
+            <Text style={[styles.tableHeaderText, styles.colStatus]}>Status / Pagamento</Text>
           </View>
 
           {recibos.map((recibo, index) => {
@@ -371,12 +380,17 @@ export default function RelatorioMensalPDF({
                   index === recibos.length - 1 ? styles.tableRowLast : {},
                 ]}
               >
-                <Text style={[styles.cellTextBold, styles.colCliente]}>{recibo.clienteNome}</Text>
+                <Text style={[styles.cellTextBold, styles.colCliente]}>{recibo.clienteNome}{recibo.isAvulso ? " (Avulso)" : ""}</Text>
                 <Text style={[styles.cellTextGray, styles.colDoc]}>{formatDocument(recibo.clienteCnpj)}</Text>
                 <Text style={[styles.cellText, styles.colHonorario]}>{formatCurrency(recibo.honorario)}</Text>
                 <Text style={[styles.cellText, styles.colOutros]}>{formatCurrency(outrosTotal)}</Text>
                 <Text style={[styles.cellTextBold, styles.colTotal]}>{formatCurrency(recibo.total)}</Text>
-                <Text style={[styles.cellText, styles.colStatus]}>{statusLabel(recibo.status)}</Text>
+                <View style={styles.colStatus}>
+                  <Text style={styles.cellText}>{statusLabel(recibo.status)}</Text>
+                  {recibo.dataPagamento && (
+                    <Text style={styles.cellTextGray}>{formatDate(recibo.dataPagamento)}</Text>
+                  )}
+                </View>
               </View>
             );
           })}

@@ -56,7 +56,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    if (!recibo.cliente.email) {
+    if (!recibo.cliente?.email) {
       return NextResponse.json(
         { success: false, error: "Cliente não possui e-mail cadastrado" },
         { status: 400 }
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
     ];
     const mesAno = `${meses[mesRef.getUTCMonth()]}/${mesRef.getUTCFullYear()}`;
-    const clienteName = recibo.cliente.nome;
+    const clienteName = recibo.cliente?.nome || recibo.avulsoNome || "Cliente";
     const valor = Number(recibo.total).toLocaleString("pt-BR", {
       style: "currency",
       currency: "BRL",
@@ -136,12 +136,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const filename = `recibo_${safeClienteName}_${monthYear}.pdf`;
 
     // Send email via Resend API (HTTPS, não SMTP)
-    console.log(`[EMAIL] Enviando para: ${recibo.cliente.email}`);
+    console.log(`[EMAIL] Enviando para: ${recibo.cliente!.email}`);
 
     const resend = new Resend(resendKey);
     const { error } = await resend.emails.send({
       from: "J AMARAL CONTABIL <adm@jamaralcontabil.com.br>",
-      to: recibo.cliente.email,
+      to: recibo.cliente!.email!,
       subject: customSubject || `Recibo de Honorários - ${mesAno} | J AMARAL CONTABIL`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
           <div style="background: #f9fafb; padding: 28px; border: 1px solid #e5e7eb; border-top: none;">
             <p style="font-size: 15px; margin: 0 0 16px;">
-              Prezado(a) <strong>${recibo.cliente.responsavel || clienteName}</strong>,
+              Prezado(a) <strong>${recibo.cliente?.responsavel || clienteName}</strong>,
             </p>
 
             <p style="font-size: 14px; color: #555; line-height: 1.6; margin: 0 0 20px; white-space: pre-line;">
@@ -221,10 +221,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       data: { emailEnviadoEm: new Date() },
     });
 
-    console.log(`[EMAIL] Enviado com sucesso para ${recibo.cliente.email}`);
+    console.log(`[EMAIL] Enviado com sucesso para ${recibo.cliente!.email}`);
     return NextResponse.json({
       success: true,
-      message: `Recibo enviado para ${recibo.cliente.email}`,
+      message: `Recibo enviado para ${recibo.cliente!.email}`,
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Erro desconhecido";

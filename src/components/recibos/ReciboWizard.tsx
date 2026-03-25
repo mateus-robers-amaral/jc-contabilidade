@@ -44,6 +44,11 @@ interface FormData {
   detalhamento: string;
 }
 
+interface AvulsoData {
+  nome: string;
+  cnpj: string;
+}
+
 function getCurrentMonth() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -69,7 +74,9 @@ export default function ReciboWizard({
   editingRecibo,
 }: ReciboWizardProps) {
   const [step, setStep] = useState(0);
+  const [isAvulso, setIsAvulso] = useState(false);
   const [clienteId, setClienteId] = useState("");
+  const [avulsoData, setAvulsoData] = useState<AvulsoData>({ nome: "", cnpj: "" });
   const [formData, setFormData] = useState<FormData>(getDefaultFormData());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -91,7 +98,13 @@ export default function ReciboWizard({
     setLoading(false);
 
     if (editingRecibo) {
-      setClienteId(editingRecibo.clienteId);
+      const editIsAvulso = !editingRecibo.clienteId;
+      setIsAvulso(editIsAvulso);
+      setClienteId(editingRecibo.clienteId || "");
+      setAvulsoData({
+        nome: editingRecibo.avulsoNome || "",
+        cnpj: editingRecibo.avulsoCnpj || "",
+      });
       const d = new Date(editingRecibo.mesReferencia);
       const formatted = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
       setFormData({
@@ -104,7 +117,9 @@ export default function ReciboWizard({
         detalhamento: editingRecibo.detalhamento || "",
       });
     } else {
+      setIsAvulso(false);
       setClienteId("");
+      setAvulsoData({ nome: "", cnpj: "" });
       setFormData(getDefaultFormData());
     }
   }, [editingRecibo]);
@@ -116,7 +131,9 @@ export default function ReciboWizard({
   const canProceed = () => {
     switch (step) {
       case 0:
-        return clienteId !== "";
+        return isAvulso
+          ? avulsoData.nome.trim() !== "" && avulsoData.cnpj.trim() !== ""
+          : clienteId !== "";
       case 1:
         return true;
       case 2:
@@ -132,7 +149,9 @@ export default function ReciboWizard({
 
     try {
       const body = {
-        clienteId,
+        ...(isAvulso
+          ? { avulsoNome: avulsoData.nome.trim(), avulsoCnpj: avulsoData.cnpj.replace(/\D/g, "") }
+          : { clienteId }),
         mesReferencia: formData.mesReferencia,
         honorario: formData.honorario,
         decimoTerceiro: formData.decimoTerceiro,
@@ -255,46 +274,127 @@ export default function ReciboWizard({
         {/* Step 0 — Cliente */}
         {step === 0 && (
           <div className="space-y-4">
-            <SearchableSelect
-              label="Cliente"
-              options={clientes.map((c) => ({
-                value: c.id,
-                label: c.nome,
-                sublabel: c.cnpj,
-              }))}
-              value={clienteId}
-              onChange={(val) => {
-                setClienteId(val);
-                if (!isEditing) {
-                  const cliente = clientes.find((c) => c.id === val);
-                  if (cliente?.honorarioPadrao) {
-                    setFormData((prev) => ({ ...prev, honorario: Number(cliente.honorarioPadrao) }));
-                  }
-                }
-              }}
-              searchPlaceholder="Buscar por nome ou documento..."
-              required
-            />
+            {/* Toggle: Cadastrado / Avulso */}
+            {!isEditing && (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setIsAvulso(false); setAvulsoData({ nome: "", cnpj: "" }); }}
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                    !isAvulso
+                      ? "border-[#00AEEF] bg-[rgba(0,174,239,0.05)]"
+                      : "border-[var(--border-primary)] hover:border-[var(--text-tertiary)]"
+                  }`}
+                >
+                  <span className={`material-symbols-outlined text-[22px] ${!isAvulso ? "text-[#00AEEF]" : "text-[var(--text-tertiary)]"}`}>person</span>
+                  <div className="text-left">
+                    <p className={`text-[14px] font-semibold ${!isAvulso ? "text-[#00AEEF]" : "text-[var(--text-primary)]"}`}>Cliente cadastrado</p>
+                    <p className="text-[var(--text-tertiary)] text-[11px]">Selecionar da base</p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setIsAvulso(true); setClienteId(""); }}
+                  className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                    isAvulso
+                      ? "border-[#FF9500] bg-[rgba(255,149,0,0.05)]"
+                      : "border-[var(--border-primary)] hover:border-[var(--text-tertiary)]"
+                  }`}
+                >
+                  <span className={`material-symbols-outlined text-[22px] ${isAvulso ? "text-[#FF9500]" : "text-[var(--text-tertiary)]"}`}>person_off</span>
+                  <div className="text-left">
+                    <p className={`text-[14px] font-semibold ${isAvulso ? "text-[#FF9500]" : "text-[var(--text-primary)]"}`}>Serviço avulso</p>
+                    <p className="text-[var(--text-tertiary)] text-[11px]">Dados apenas no recibo</p>
+                  </div>
+                </button>
+              </div>
+            )}
 
-            {selectedCliente && (
-              <div className="flex items-center gap-4 p-5 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
-                <div className="flex items-center justify-center size-14 rounded-2xl bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white text-[18px] font-bold shrink-0">
-                  {getInitials(selectedCliente.nome)}
+            {/* Cliente cadastrado */}
+            {!isAvulso && (
+              <>
+                <SearchableSelect
+                  label="Cliente"
+                  options={clientes.map((c) => ({
+                    value: c.id,
+                    label: c.nome,
+                    sublabel: c.cnpj,
+                  }))}
+                  value={clienteId}
+                  onChange={(val) => {
+                    setClienteId(val);
+                    if (!isEditing) {
+                      const cliente = clientes.find((c) => c.id === val);
+                      if (cliente?.honorarioPadrao) {
+                        setFormData((prev) => ({ ...prev, honorario: Number(cliente.honorarioPadrao) }));
+                      }
+                    }
+                  }}
+                  searchPlaceholder="Buscar por nome ou documento..."
+                  required
+                />
+                {selectedCliente && (
+                  <div className="flex items-center gap-4 p-5 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
+                    <div className="flex items-center justify-center size-14 rounded-2xl bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white text-[18px] font-bold shrink-0">
+                      {getInitials(selectedCliente.nome)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[var(--text-primary)] text-[16px] font-semibold truncate">{selectedCliente.nome}</p>
+                      <p className="text-[var(--text-tertiary)] text-[13px] font-mono">{selectedCliente.cnpj}</p>
+                      {selectedCliente.honorarioPadrao && (
+                        <p className="text-[#00AEEF] text-[13px] font-medium mt-1">
+                          Honorário padrão: {formatCurrency(Number(selectedCliente.honorarioPadrao))}
+                        </p>
+                      )}
+                    </div>
+                    <span className="material-symbols-outlined text-[#34C759] text-[24px]">check_circle</span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Serviço avulso */}
+            {isAvulso && (
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-[rgba(255,149,0,0.08)] border border-[rgba(255,149,0,0.15)] text-[13px] text-[var(--text-secondary)]">
+                  <span className="material-symbols-outlined text-[#FF9500] text-[18px] mt-0.5">info</span>
+                  <span>Os dados informados abaixo serão usados <strong>apenas neste recibo</strong> e não serão salvos na base de clientes.</span>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[var(--text-primary)] text-[16px] font-semibold truncate">
-                    {selectedCliente.nome}
-                  </p>
-                  <p className="text-[var(--text-tertiary)] text-[13px] font-mono">
-                    {selectedCliente.cnpj}
-                  </p>
-                  {selectedCliente.honorarioPadrao && (
-                    <p className="text-[#00AEEF] text-[13px] font-medium mt-1">
-                      Honorário padrão: {formatCurrency(Number(selectedCliente.honorarioPadrao))}
-                    </p>
-                  )}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[var(--text-primary)] text-[14px] font-medium">Nome / Razão Social <span className="text-[#FF3B30]">*</span></label>
+                  <input
+                    type="text"
+                    value={avulsoData.nome}
+                    onChange={(e) => setAvulsoData((prev) => ({ ...prev, nome: e.target.value }))}
+                    placeholder="Nome completo ou razão social"
+                    className="w-full h-[48px] bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 text-[var(--text-primary)] text-[14px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[#00AEEF] focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] transition-all"
+                  />
                 </div>
-                <span className="material-symbols-outlined text-[#34C759] text-[24px]">check_circle</span>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[var(--text-primary)] text-[14px] font-medium">CPF / CNPJ <span className="text-[#FF3B30]">*</span></label>
+                  <input
+                    type="text"
+                    value={avulsoData.cnpj}
+                    onChange={(e) => setAvulsoData((prev) => ({ ...prev, cnpj: e.target.value }))}
+                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                    className="w-full h-[48px] bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 text-[var(--text-primary)] text-[14px] font-mono placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[#00AEEF] focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] transition-all"
+                  />
+                </div>
+                {avulsoData.nome && avulsoData.cnpj && (
+                  <div className="flex items-center gap-4 p-5 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
+                    <div className="flex items-center justify-center size-14 rounded-2xl bg-gradient-to-br from-[#FF9500] to-[#FF6B00] text-white text-[18px] font-bold shrink-0">
+                      {getInitials(avulsoData.nome)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[var(--text-primary)] text-[16px] font-semibold truncate">{avulsoData.nome}</p>
+                        <span className="shrink-0 px-2 py-0.5 rounded-md bg-[rgba(255,149,0,0.15)] text-[#FF9500] text-[10px] font-bold uppercase">Avulso</span>
+                      </div>
+                      <p className="text-[var(--text-tertiary)] text-[13px] font-mono">{avulsoData.cnpj}</p>
+                    </div>
+                    <span className="material-symbols-outlined text-[#34C759] text-[24px]">check_circle</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -432,15 +532,22 @@ export default function ReciboWizard({
               {/* Client section */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-primary)]">
                 <div className="flex items-center gap-4">
-                  <div className="size-12 rounded-xl bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white flex items-center justify-center text-[14px] font-bold">
-                    {selectedCliente ? getInitials(selectedCliente.nome) : "?"}
+                  <div className={`size-12 rounded-xl text-white flex items-center justify-center text-[14px] font-bold ${
+                    isAvulso ? "bg-gradient-to-br from-[#FF9500] to-[#FF6B00]" : "bg-gradient-to-br from-[#00AEEF] to-[#2E3192]"
+                  }`}>
+                    {isAvulso ? getInitials(avulsoData.nome) : selectedCliente ? getInitials(selectedCliente.nome) : "?"}
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] text-[15px] font-semibold">
-                      {selectedCliente?.nome}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[var(--text-primary)] text-[15px] font-semibold">
+                        {isAvulso ? avulsoData.nome : selectedCliente?.nome}
+                      </p>
+                      {isAvulso && (
+                        <span className="px-2 py-0.5 rounded-md bg-[rgba(255,149,0,0.15)] text-[#FF9500] text-[10px] font-bold uppercase">Avulso</span>
+                      )}
+                    </div>
                     <p className="text-[var(--text-tertiary)] text-[12px] font-mono">
-                      {selectedCliente?.cnpj}
+                      {isAvulso ? avulsoData.cnpj : selectedCliente?.cnpj}
                     </p>
                   </div>
                 </div>

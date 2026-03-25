@@ -36,6 +36,8 @@ export default function ReciboPreviewModal({
   const mesNome = MONTH_NAMES[mesRef.getUTCMonth()];
   const ano = mesRef.getUTCFullYear();
   const pdfUrl = `/api/recibos/${recibo.id}/pdf`;
+  const reciboAvulso = !recibo.clienteId;
+  const clienteNome = recibo.cliente?.nome || recibo.avulsoNome || "Cliente removido";
 
   const handleClose = () => {
     setIsFullscreen(false);
@@ -60,11 +62,11 @@ export default function ReciboPreviewModal({
       <div className="fixed inset-0 z-50 flex flex-col bg-[var(--bg-primary)]">
         <div className="flex items-center justify-between px-4 py-2 bg-[var(--surface-primary)] border-b border-[var(--border-primary)]">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center size-9 rounded-lg bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-bold text-[11px]">
-              {recibo.cliente ? getInitials(recibo.cliente.nome) : "??"}
+            <div className={`flex items-center justify-center size-9 rounded-lg text-white font-bold text-[11px] ${reciboAvulso ? "bg-gradient-to-br from-[#FF9500] to-[#FF6B00]" : "bg-gradient-to-br from-[#00AEEF] to-[#2E3192]"}`}>
+              {getInitials(clienteNome)}
             </div>
             <div>
-              <p className="text-[var(--text-primary)] text-[14px] font-semibold">{recibo.cliente?.nome}</p>
+              <p className="text-[var(--text-primary)] text-[14px] font-semibold">{clienteNome}{reciboAvulso ? " (Avulso)" : ""}</p>
               <p className="text-[var(--text-tertiary)] text-[11px]">{mesNome} {ano} — #{recibo.id.slice(0, 6).toUpperCase()}</p>
             </div>
           </div>
@@ -101,12 +103,13 @@ export default function ReciboPreviewModal({
         {/* Header */}
         <div className="flex items-center justify-between bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-t-2xl px-5 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center size-10 rounded-xl bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-bold text-[13px]">
-              {recibo.cliente ? getInitials(recibo.cliente.nome) : "??"}
+            <div className={`flex items-center justify-center size-10 rounded-xl text-white font-bold text-[13px] ${reciboAvulso ? "bg-gradient-to-br from-[#FF9500] to-[#FF6B00]" : "bg-gradient-to-br from-[#00AEEF] to-[#2E3192]"}`}>
+              {getInitials(clienteNome)}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-[var(--text-primary)] text-[16px] font-bold">{recibo.cliente?.nome}</h2>
+                <h2 className="text-[var(--text-primary)] text-[16px] font-bold">{clienteNome}</h2>
+                {reciboAvulso && <span className="px-2 py-0.5 rounded-md bg-[rgba(255,149,0,0.15)] text-[#FF9500] text-[10px] font-bold uppercase">Avulso</span>}
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ backgroundColor: `${statusColor}15`, color: statusColor }}>
                   {statusLabel}
                 </span>

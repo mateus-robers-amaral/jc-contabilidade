@@ -25,11 +25,12 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
+    const searchDigits = parseCNPJ(search);
     const where = search
       ? {
           OR: [
             { nome: { contains: search, mode: "insensitive" as const } },
-            { cnpj: { contains: parseCNPJ(search) } },
+            ...(searchDigits ? [{ cnpj: { contains: searchDigits } }] : []),
           ],
         }
       : {};

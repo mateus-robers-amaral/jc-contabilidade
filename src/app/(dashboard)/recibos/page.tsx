@@ -23,6 +23,14 @@ function mesAnoLabel(key: string): string {
   return `${MESES[parseInt(month) - 1]} ${year}`;
 }
 
+function getReciboNome(r: Recibo): string {
+  return r.cliente?.nome || r.avulsoNome || "Cliente removido";
+}
+
+function isAvulso(r: Recibo): boolean {
+  return !r.clienteId;
+}
+
 interface MonthGroup {
   key: string;
   label: string;
@@ -38,7 +46,6 @@ export default function RecibosPage() {
   const [recibos, setRecibos] = useState<Recibo[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState(searchParams.get("search") || "");
   const [wizardOpen, setWizardOpen] = useState(searchParams.get("new") === "true");
   const [editingRecibo, setEditingRecibo] = useState<Recibo | null>(null);
   const [previewRecibo, setPreviewRecibo] = useState<Recibo | null>(null);
@@ -74,10 +81,7 @@ export default function RecibosPage() {
   const fetchRecibos = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ limit: "500" });
-      if (search) params.append("search", search);
-
-      const res = await fetch(`/api/recibos?${params}`);
+      const res = await fetch("/api/recibos?limit=500");
       const data: ApiResponse<PaginatedResponse<Recibo>> = await res.json();
 
       if (data.success && data.data) {
@@ -88,7 +92,7 @@ export default function RecibosPage() {
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, []);
 
   const fetchClientes = async () => {
     try {
@@ -153,6 +157,12 @@ export default function RecibosPage() {
     setRelatorioFullscreen(false);
   };
 
+  // Month modal state
+  const [selectedMonthKey, setSelectedMonthKey] = useState<string | null>(null);
+  const [openMonthGroup, setOpenMonthGroup] = useState<MonthGroup | null>(null);
+  const [modalSearch, setModalSearch] = useState("");
+  const [modalStatusFilter, setModalStatusFilter] = useState<string>("todos");
+
   // Group recibos by month
   const monthGroups: MonthGroup[] = useMemo(() => {
     const groups: Record<string, Recibo[]> = {};
@@ -175,32 +185,83 @@ export default function RecibosPage() {
       }));
   }, [recibos]);
 
-  // Global stats
+  // Sync open modal with updated recibos data
+  useEffect(() => {
+    if (openMonthGroup) {
+      const updated = monthGroups.find((g) => g.key === openMonthGroup.key);
+      if (updated) setOpenMonthGroup(updated);
+    }
+  }, [monthGroups]);
+
+  // Stats based on selected month or all
   const stats = useMemo(() => {
-    const currentKey = mesAnoKey(new Date());
-    const currentMonth = monthGroups.find((g) => g.key === currentKey);
+    const selectedGroup = selectedMonthKey
+      ? monthGroups.find((g) => g.key === selectedMonthKey)
+      : null;
+    const source = selectedGroup ? selectedGroup.recibos : recibos;
+    const pagos = source.filter((r) => r.status === "pago");
+    const pendentes = source.filter((r) => r.status === "pendente");
     return {
-      totalGeral: recibos.reduce((sum, r) => sum + Number(r.total), 0),
-      totalRecibos: recibos.length,
-      mesAtual: currentMonth,
+      totalRecibos: source.length,
+      totalGeral: source.reduce((sum, r) => sum + Number(r.total), 0),
+      pagosCount: pagos.length,
+      pagosTotal: pagos.reduce((sum, r) => sum + Number(r.total), 0),
+      pendentesCount: pendentes.length,
+      pendentesTotal: pendentes.reduce((sum, r) => sum + Number(r.total), 0),
+      label: selectedGroup ? selectedGroup.label : "Todos os meses",
     };
-  }, [recibos, monthGroups]);
+  }, [recibos, monthGroups, selectedMonthKey]);
 
-  // Collapsed months state
-  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
-  const toggleMonth = (key: string) => {
-    setCollapsedMonths((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
+  const openMonth = (group: MonthGroup) => {
+    setSelectedMonthKey(group.key);
+    setOpenMonthGroup(group);
+    setModalSearch("");
+    setModalStatusFilter("todos");
+  };
+
+  const closeMonthModal = () => {
+    setOpenMonthGroup(null);
+  };
+
+  // Sort state for table columns
+  const [sortColumn, setSortColumn] = useState<"cliente" | "valor" | "status" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (col: "cliente" | "valor" | "status") => {
+    if (sortColumn === col) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(col);
+      setSortDir("asc");
+    }
+  };
+  const sortRecibos = useCallback((items: Recibo[]) => {
+    if (!sortColumn) return items;
+    const sorted = [...items].sort((a, b) => {
+      if (sortColumn === "cliente") {
+        return getReciboNome(a).localeCompare(getReciboNome(b), "pt-BR");
+      }
+      if (sortColumn === "valor") {
+        return Number(a.total) - Number(b.total);
+      }
+      const order: Record<string, number> = { pendente: 0, pago: 1, cancelado: 2 };
+      return (order[a.status] ?? 0) - (order[b.status] ?? 0);
     });
-  };
+    return sortDir === "desc" ? sorted.reverse() : sorted;
+  }, [sortColumn, sortDir]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchRecibos();
-  };
+  // Filtered recibos inside the month modal
+  const modalRecibos = useMemo(() => {
+    if (!openMonthGroup) return [];
+    let items = openMonthGroup.recibos;
+    if (modalSearch) {
+      const q = modalSearch.toLowerCase();
+      items = items.filter((r) => getReciboNome(r).toLowerCase().includes(q));
+    }
+    if (modalStatusFilter !== "todos") {
+      items = items.filter((r) => r.status === modalStatusFilter);
+    }
+    return sortRecibos(items);
+  }, [openMonthGroup, modalSearch, modalStatusFilter, sortRecibos]);
 
   const handleLoteSubmit = async () => {
     setLoteLoading(true);
@@ -245,13 +306,27 @@ export default function RecibosPage() {
   };
 
   const handleStatusChange = async (recibo: Recibo, newStatus: string) => {
+    // Optimistic update — no reload
+    setRecibos((prev) =>
+      prev.map((r) =>
+        r.id === recibo.id
+          ? { ...r, status: newStatus as Recibo["status"], dataPagamento: newStatus === "pago" ? new Date().toISOString() as unknown as Date : null }
+          : r
+      )
+    );
     try {
       const res = await fetch(`/api/recibos/${recibo.id}`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus }),
       });
-      const data: ApiResponse = await res.json();
-      if (data.success) fetchRecibos();
-    } catch (error) { console.error("Error updating status:", error); }
+      const data: ApiResponse<Recibo> = await res.json();
+      if (!data.success) {
+        // Revert on failure
+        setRecibos((prev) => prev.map((r) => (r.id === recibo.id ? recibo : r)));
+      }
+    } catch {
+      // Revert on error
+      setRecibos((prev) => prev.map((r) => (r.id === recibo.id ? recibo : r)));
+    }
   };
 
   const openEmailModal = (recibo: Recibo) => {
@@ -306,55 +381,48 @@ export default function RecibosPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="flex flex-col p-5 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm">
-          <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(0,174,239,0.1)] mb-3">
-            <span className="material-symbols-outlined text-[#00AEEF] text-[22px]">receipt_long</span>
+      <div className="flex flex-col gap-2">
+        {selectedMonthKey && (
+          <div className="flex items-center gap-2">
+            <span className="text-[var(--text-tertiary)] text-[13px]">Exibindo KPIs de <strong className="text-[var(--text-primary)]">{stats.label}</strong></span>
+            <button onClick={() => setSelectedMonthKey(null)} className="text-[#00AEEF] text-[13px] font-medium hover:underline cursor-pointer">Ver total</button>
           </div>
-          <p className="text-[var(--text-tertiary)] text-[12px] font-medium uppercase tracking-wide">Total de Recibos</p>
-          <p className="text-[var(--text-primary)] text-[24px] font-bold">{stats.totalRecibos}</p>
-        </div>
-        <div className="flex flex-col p-5 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm">
-          <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(88,86,214,0.1)] mb-3">
-            <span className="material-symbols-outlined text-[#5856D6] text-[22px]">payments</span>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="flex flex-col p-5 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm">
+            <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(0,174,239,0.1)] mb-3">
+              <span className="material-symbols-outlined text-[#00AEEF] text-[22px]">receipt_long</span>
+            </div>
+            <p className="text-[var(--text-tertiary)] text-[12px] font-medium uppercase tracking-wide">Total de Recibos</p>
+            <p className="text-[var(--text-primary)] text-[24px] font-bold">{stats.totalRecibos}</p>
           </div>
-          <p className="text-[var(--text-tertiary)] text-[12px] font-medium uppercase tracking-wide">Faturamento Total</p>
-          <p className="text-[var(--text-primary)] text-[24px] font-bold">{formatCurrency(stats.totalGeral)}</p>
-        </div>
-        <div className="flex flex-col p-5 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm">
-          <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(52,199,89,0.1)] mb-3">
-            <span className="material-symbols-outlined text-[#34C759] text-[22px]">check_circle</span>
+          <div className="flex flex-col p-5 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm">
+            <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(88,86,214,0.1)] mb-3">
+              <span className="material-symbols-outlined text-[#5856D6] text-[22px]">payments</span>
+            </div>
+            <p className="text-[var(--text-tertiary)] text-[12px] font-medium uppercase tracking-wide">Faturamento Total</p>
+            <p className="text-[var(--text-primary)] text-[24px] font-bold">{formatCurrency(stats.totalGeral)}</p>
           </div>
-          <p className="text-[var(--text-tertiary)] text-[12px] font-medium uppercase tracking-wide">Mês Atual — Pagos</p>
-          <p className="text-[var(--text-primary)] text-[24px] font-bold">
-            {stats.mesAtual ? `${stats.mesAtual.pagos} de ${stats.mesAtual.recibos.length}` : "—"}
-          </p>
-        </div>
-        <div className="flex flex-col p-5 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm">
-          <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(255,149,0,0.1)] mb-3">
-            <span className="material-symbols-outlined text-[#FF9500] text-[22px]">schedule</span>
+          <div className="flex flex-col p-5 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm">
+            <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(52,199,89,0.1)] mb-3">
+              <span className="material-symbols-outlined text-[#34C759] text-[22px]">check_circle</span>
+            </div>
+            <p className="text-[var(--text-tertiary)] text-[12px] font-medium uppercase tracking-wide">Pagos</p>
+            <p className="text-[var(--text-primary)] text-[24px] font-bold">{stats.pagosCount}</p>
+            <p className="text-[var(--text-tertiary)] text-[12px] mt-1">{formatCurrency(stats.pagosTotal)}</p>
           </div>
-          <p className="text-[var(--text-tertiary)] text-[12px] font-medium uppercase tracking-wide">Mês Atual — Pendentes</p>
-          <p className="text-[var(--text-primary)] text-[24px] font-bold">
-            {stats.mesAtual ? formatCurrency(stats.mesAtual.recibos.filter((r) => r.status === "pendente").reduce((s, r) => s + Number(r.total), 0)) : "—"}
-          </p>
+          <div className="flex flex-col p-5 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm">
+            <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(255,149,0,0.1)] mb-3">
+              <span className="material-symbols-outlined text-[#FF9500] text-[22px]">schedule</span>
+            </div>
+            <p className="text-[var(--text-tertiary)] text-[12px] font-medium uppercase tracking-wide">Pendentes</p>
+            <p className="text-[var(--text-primary)] text-[24px] font-bold">{stats.pendentesCount}</p>
+            <p className="text-[var(--text-tertiary)] text-[12px] mt-1">{formatCurrency(stats.pendentesTotal)}</p>
+          </div>
         </div>
       </div>
 
-      {/* Search */}
-      <form onSubmit={handleSearch} className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between bg-[var(--surface-primary)] p-2 rounded-2xl border border-[var(--border-primary)] shadow-sm">
-        <div className="relative flex-1 min-w-[280px]">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <span className="material-symbols-outlined text-[var(--text-tertiary)] text-[20px]">search</span>
-          </div>
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-            className="block w-full pl-12 pr-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] focus:border-[#00AEEF] focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] text-[14px] transition-all outline-none"
-            placeholder="Buscar por nome do cliente..." />
-        </div>
-        <Button type="submit" variant="secondary" size="sm">Buscar</Button>
-      </form>
-
-      {/* Loading */}
+      {/* Month Cards */}
       {loading ? (
         <div className="flex justify-center py-16">
           <span className="material-symbols-outlined animate-spin text-[#00AEEF] text-[32px]">progress_activity</span>
@@ -367,133 +435,215 @@ export default function RecibosPage() {
           <p className="text-[var(--text-tertiary)] text-[15px]">Nenhum recibo encontrado</p>
         </div>
       ) : (
-        /* Month Groups */
-        <div className="flex flex-col gap-4">
-          {monthGroups.map((group) => (
-            <div key={group.key} className="bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-2xl overflow-hidden shadow-sm">
-              {/* Month Header */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {monthGroups.map((group) => {
+            const isSelected = selectedMonthKey === group.key;
+            const mesNum = parseInt(group.key.split("-")[1]);
+            return (
               <button
-                onClick={() => toggleMonth(group.key)}
-                className="w-full flex items-center justify-between px-6 py-4 bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+                key={group.key}
+                onClick={() => openMonth(group)}
+                className={`flex flex-col p-5 rounded-2xl border text-left transition-all cursor-pointer hover:shadow-md ${
+                  isSelected
+                    ? "border-[#00AEEF] bg-[rgba(0,174,239,0.05)] ring-2 ring-[rgba(0,174,239,0.15)]"
+                    : "border-[var(--border-primary)] bg-[var(--surface-primary)] hover:border-[#00AEEF]"
+                }`}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 mb-3">
                   <div className="flex items-center justify-center size-10 rounded-xl bg-[#2E3192]">
-                    <span className="material-symbols-outlined text-white text-[20px]">calendar_month</span>
+                    <span className="text-white text-[13px] font-bold">{MESES[mesNum - 1]?.substring(0, 3).toUpperCase()}</span>
                   </div>
-                  <div className="text-left">
-                    <p className="text-[var(--text-primary)] text-[16px] font-bold">{group.label}</p>
-                    <p className="text-[var(--text-tertiary)] text-[12px]">
-                      {group.recibos.length} recibo{group.recibos.length !== 1 ? "s" : ""}
-                    </p>
+                  <div>
+                    <p className="text-[var(--text-primary)] text-[15px] font-bold leading-tight">{MESES[mesNum - 1]}</p>
+                    <p className="text-[var(--text-tertiary)] text-[11px]">{group.key.split("-")[0]}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-6">
-                  <div className="hidden sm:flex items-center gap-4">
-                    <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#34C759]">
-                      <span className="size-2 rounded-full bg-[#34C759]" />{group.pagos} pago{group.pagos !== 1 ? "s" : ""}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#FF9500]">
-                      <span className="size-2 rounded-full bg-[#FF9500]" />{group.pendentes} pendente{group.pendentes !== 1 ? "s" : ""}
-                    </span>
-                    {group.cancelados > 0 && (
-                      <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#FF3B30]">
-                        <span className="size-2 rounded-full bg-[#FF3B30]" />{group.cancelados}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[#00AEEF] text-[16px] font-bold">{formatCurrency(group.total)}</p>
-                  <span className={`material-symbols-outlined text-[var(--text-tertiary)] transition-transform ${collapsedMonths.has(group.key) ? "" : "rotate-180"}`}>
-                    expand_more
+                <p className="text-[#00AEEF] text-[18px] font-bold mb-2">{formatCurrency(group.total)}</p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#34C759]">
+                    <span className="size-1.5 rounded-full bg-[#34C759]" />{group.pagos}
                   </span>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#FF9500]">
+                    <span className="size-1.5 rounded-full bg-[#FF9500]" />{group.pendentes}
+                  </span>
+                  {group.cancelados > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#FF3B30]">
+                      <span className="size-1.5 rounded-full bg-[#FF3B30]" />{group.cancelados}
+                    </span>
+                  )}
+                  <span className="text-[var(--text-tertiary)] text-[11px] ml-auto">{group.recibos.length} recibo{group.recibos.length !== 1 ? "s" : ""}</span>
                 </div>
               </button>
+            );
+          })}
+        </div>
+      )}
 
-              {/* Recibos Table */}
-              {!collapsedMonths.has(group.key) && (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-t border-b border-[var(--border-primary)] bg-[var(--bg-secondary)]">
-                        <th className="px-6 py-3 text-[var(--text-tertiary)] text-[11px] uppercase font-semibold tracking-wider">Cliente</th>
-                        <th className="px-6 py-3 text-[var(--text-tertiary)] text-[11px] uppercase font-semibold tracking-wider">Valor</th>
-                        <th className="px-6 py-3 text-[var(--text-tertiary)] text-[11px] uppercase font-semibold tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-[var(--text-tertiary)] text-[11px] uppercase font-semibold tracking-wider text-right">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[var(--border-secondary)]">
-                      {group.recibos.map((recibo) => (
-                        <tr key={recibo.id} onClick={() => setPreviewRecibo(recibo)} className="group hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer">
-                          <td className="px-6 py-3">
-                            <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center size-10 rounded-xl bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-bold text-[12px]">
-                                {recibo.cliente ? getInitials(recibo.cliente.nome) : "??"}
-                              </div>
-                              <span className="text-[var(--text-primary)] font-medium text-[13px]">
-                                {recibo.cliente?.nome || "Cliente removido"}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-3">
-                            <span className="text-[var(--text-primary)] font-semibold text-[13px]">
-                              {formatCurrency(Number(recibo.total))}
-                            </span>
-                          </td>
-                          <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
-                            <select
-                              value={recibo.status}
-                              onChange={(e) => handleStatusChange(recibo, e.target.value)}
-                              className={`px-3 py-1 rounded-full text-[11px] font-semibold border bg-transparent cursor-pointer transition-colors ${
-                                recibo.status === "pago"
-                                  ? "text-[#34C759] border-[rgba(52,199,89,0.3)] bg-[rgba(52,199,89,0.1)]"
-                                  : recibo.status === "cancelado"
-                                  ? "text-[#FF3B30] border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.1)]"
-                                  : "text-[#FF9500] border-[rgba(255,149,0,0.3)] bg-[rgba(255,149,0,0.1)]"
-                              }`}
-                            >
-                              <option value="pendente">Pendente</option>
-                              <option value="pago">Pago</option>
-                              <option value="cancelado">Cancelado</option>
-                            </select>
-                          </td>
-                          <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-1">
-                              <button onClick={() => openEditWizard(recibo)} className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#00AEEF] hover:bg-[rgba(0,174,239,0.1)] transition-colors" title="Editar">
-                                <span className="material-symbols-outlined text-[18px]">edit</span>
-                              </button>
-                              <a href={`/api/recibos/${recibo.id}/pdf`} download className="size-8 rounded-full flex items-center justify-center text-[#00AEEF] hover:bg-[#00AEEF] hover:text-white transition-all" title="Download PDF">
-                                <span className="material-symbols-outlined text-[18px]">download</span>
-                              </a>
-                              {recibo.emailEnviadoEm ? (
-                                <>
-                                  <span className="size-8 rounded-full flex items-center justify-center text-[#34C759] bg-[rgba(52,199,89,0.1)]" title={`Enviado em ${new Date(recibo.emailEnviadoEm).toLocaleDateString("pt-BR")}`}>
-                                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                                  </span>
-                                  <button onClick={() => openEmailModal(recibo)} disabled={!!sendingEmail}
-                                    className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#5856D6] hover:bg-[rgba(88,86,214,0.1)] transition-all disabled:opacity-50"
-                                    title="Reenviar e-mail">
-                                    <span className="material-symbols-outlined text-[18px]">forward_to_inbox</span>
-                                  </button>
-                                </>
-                              ) : (
-                                <button onClick={() => openEmailModal(recibo)} disabled={!!sendingEmail}
-                                  className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#5856D6] hover:bg-[rgba(88,86,214,0.1)] transition-all disabled:opacity-50"
-                                  title={recibo.cliente?.email ? `Enviar para ${recibo.cliente.email}` : "Cliente sem e-mail"}>
-                                  <span className="material-symbols-outlined text-[18px]">mail</span>
-                                </button>
-                              )}
-                              <button onClick={() => setDeleteConfirm(recibo)} className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#FF3B30] hover:bg-[rgba(255,59,48,0.1)] transition-colors" title="Excluir">
-                                <span className="material-symbols-outlined text-[18px]">delete</span>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+      {/* Month Detail Modal */}
+      {openMonthGroup && (
+        <div className="fixed inset-0 z-50 flex flex-col p-3 md:p-6">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeMonthModal} />
+          <div className="relative flex flex-col w-full h-full max-w-5xl mx-auto z-10 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-2xl shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-primary)] bg-[var(--bg-secondary)] shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center size-10 rounded-xl bg-[#2E3192]">
+                  <span className="material-symbols-outlined text-white text-[20px]">calendar_month</span>
                 </div>
-              )}
+                <div>
+                  <h2 className="text-[var(--text-primary)] text-[18px] font-bold">{openMonthGroup.label}</h2>
+                  <p className="text-[var(--text-tertiary)] text-[12px]">{openMonthGroup.recibos.length} recibo{openMonthGroup.recibos.length !== 1 ? "s" : ""} — {formatCurrency(openMonthGroup.total)}</p>
+                </div>
+              </div>
+              <button onClick={closeMonthModal}
+                className="size-9 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
             </div>
-          ))}
+
+            {/* Modal Search & Filters */}
+            <div className="flex flex-col sm:flex-row gap-3 px-6 py-3 border-b border-[var(--border-primary)] shrink-0">
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="material-symbols-outlined text-[var(--text-tertiary)] text-[18px]">search</span>
+                </div>
+                <input
+                  type="text"
+                  value={modalSearch}
+                  onChange={(e) => setModalSearch(e.target.value)}
+                  className="block w-full pl-10 pr-4 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] focus:border-[#00AEEF] focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] text-[13px] transition-all outline-none"
+                  placeholder="Buscar cliente..."
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                {(["todos", "pendente", "pago", "cancelado"] as const).map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setModalStatusFilter(st)}
+                    className={`px-3 py-2 rounded-lg text-[12px] font-semibold transition-all cursor-pointer ${
+                      modalStatusFilter === st
+                        ? st === "pago" ? "bg-[#34C759] text-white"
+                          : st === "pendente" ? "bg-[#FF9500] text-white"
+                          : st === "cancelado" ? "bg-[#FF3B30] text-white"
+                          : "bg-[#00AEEF] text-white"
+                        : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
+                    }`}
+                  >
+                    {st === "todos" ? "Todos" : st === "pago" ? "Pagos" : st === "pendente" ? "Pendentes" : "Cancelados"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Table */}
+            <div className="flex-1 overflow-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 z-10">
+                  <tr className="border-b border-[var(--border-primary)] bg-[var(--bg-secondary)]">
+                    {(["cliente", "valor", "status"] as const).map((col) => (
+                      <th
+                        key={col}
+                        onClick={() => handleSort(col)}
+                        className="px-6 py-3 text-[var(--text-tertiary)] text-[11px] uppercase font-semibold tracking-wider cursor-pointer hover:text-[var(--text-primary)] transition-colors select-none"
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          {col === "cliente" ? "Cliente" : col === "valor" ? "Valor" : "Status"}
+                          {sortColumn === col && (
+                            <span className="material-symbols-outlined text-[14px] text-[#00AEEF]">
+                              {sortDir === "asc" ? "arrow_upward" : "arrow_downward"}
+                            </span>
+                          )}
+                        </span>
+                      </th>
+                    ))}
+                    <th className="px-6 py-3 text-[var(--text-tertiary)] text-[11px] uppercase font-semibold tracking-wider text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-secondary)]">
+                  {modalRecibos.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-12 text-center text-[var(--text-tertiary)] text-[14px]">
+                        Nenhum recibo encontrado com esses filtros
+                      </td>
+                    </tr>
+                  ) : modalRecibos.map((recibo) => (
+                    <tr key={recibo.id} onClick={() => setPreviewRecibo(recibo)} className="group hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer">
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`flex items-center justify-center size-10 rounded-xl text-white font-bold text-[12px] ${
+                            isAvulso(recibo) ? "bg-gradient-to-br from-[#FF9500] to-[#FF6B00]" : "bg-gradient-to-br from-[#00AEEF] to-[#2E3192]"
+                          }`}>
+                            {getInitials(getReciboNome(recibo))}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[var(--text-primary)] font-medium text-[13px]">
+                              {getReciboNome(recibo)}
+                            </span>
+                            {isAvulso(recibo) && (
+                              <span className="px-1.5 py-0.5 rounded bg-[rgba(255,149,0,0.15)] text-[#FF9500] text-[9px] font-bold uppercase">Avulso</span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className="text-[var(--text-primary)] font-semibold text-[13px]">
+                          {formatCurrency(Number(recibo.total))}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
+                        <select
+                          value={recibo.status}
+                          onChange={(e) => handleStatusChange(recibo, e.target.value)}
+                          className={`px-3 py-1 rounded-full text-[11px] font-semibold border bg-transparent cursor-pointer transition-colors ${
+                            recibo.status === "pago"
+                              ? "text-[#34C759] border-[rgba(52,199,89,0.3)] bg-[rgba(52,199,89,0.1)]"
+                              : recibo.status === "cancelado"
+                              ? "text-[#FF3B30] border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.1)]"
+                              : "text-[#FF9500] border-[rgba(255,149,0,0.3)] bg-[rgba(255,149,0,0.1)]"
+                          }`}
+                        >
+                          <option value="pendente">Pendente</option>
+                          <option value="pago">Pago</option>
+                          <option value="cancelado">Cancelado</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
+                          <button onClick={() => openEditWizard(recibo)} className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#00AEEF] hover:bg-[rgba(0,174,239,0.1)] transition-colors" title="Editar">
+                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                          </button>
+                          <a href={`/api/recibos/${recibo.id}/pdf`} download className="size-8 rounded-full flex items-center justify-center text-[#00AEEF] hover:bg-[#00AEEF] hover:text-white transition-all" title="Download PDF">
+                            <span className="material-symbols-outlined text-[18px]">download</span>
+                          </a>
+                          {recibo.emailEnviadoEm ? (
+                            <>
+                              <span className="size-8 rounded-full flex items-center justify-center text-[#34C759] bg-[rgba(52,199,89,0.1)]" title={`Enviado em ${new Date(recibo.emailEnviadoEm).toLocaleDateString("pt-BR")}`}>
+                                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                              </span>
+                              <button onClick={() => openEmailModal(recibo)} disabled={!!sendingEmail}
+                                className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#5856D6] hover:bg-[rgba(88,86,214,0.1)] transition-all disabled:opacity-50"
+                                title="Reenviar e-mail">
+                                <span className="material-symbols-outlined text-[18px]">forward_to_inbox</span>
+                              </button>
+                            </>
+                          ) : (
+                            <button onClick={() => openEmailModal(recibo)} disabled={!!sendingEmail}
+                              className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#5856D6] hover:bg-[rgba(88,86,214,0.1)] transition-all disabled:opacity-50"
+                              title={recibo.cliente?.email ? `Enviar para ${recibo.cliente.email}` : "Cliente sem e-mail"}>
+                              <span className="material-symbols-outlined text-[18px]">mail</span>
+                            </button>
+                          )}
+                          <button onClick={() => setDeleteConfirm(recibo)} className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#FF3B30] hover:bg-[rgba(255,59,48,0.1)] transition-colors" title="Excluir">
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
 
