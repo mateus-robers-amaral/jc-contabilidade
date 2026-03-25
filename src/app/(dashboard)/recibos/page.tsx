@@ -591,21 +591,28 @@ export default function RecibosPage() {
                         </span>
                       </td>
                       <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
-                        <select
-                          value={recibo.status}
-                          onChange={(e) => handleStatusChange(recibo, e.target.value)}
-                          className={`px-3 py-1 rounded-full text-[11px] font-semibold border bg-transparent cursor-pointer transition-colors ${
-                            recibo.status === "pago"
-                              ? "text-[#34C759] border-[rgba(52,199,89,0.3)] bg-[rgba(52,199,89,0.1)]"
-                              : recibo.status === "cancelado"
-                              ? "text-[#FF3B30] border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.1)]"
-                              : "text-[#FF9500] border-[rgba(255,149,0,0.3)] bg-[rgba(255,149,0,0.1)]"
-                          }`}
-                        >
-                          <option value="pendente">Pendente</option>
-                          <option value="pago">Pago</option>
-                          <option value="cancelado">Cancelado</option>
-                        </select>
+                        <div className="flex flex-col gap-1">
+                          <select
+                            value={recibo.status}
+                            onChange={(e) => handleStatusChange(recibo, e.target.value)}
+                            className={`px-3 py-1 rounded-full text-[11px] font-semibold border bg-transparent cursor-pointer transition-colors ${
+                              recibo.status === "pago"
+                                ? "text-[#34C759] border-[rgba(52,199,89,0.3)] bg-[rgba(52,199,89,0.1)]"
+                                : recibo.status === "cancelado"
+                                ? "text-[#FF3B30] border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.1)]"
+                                : "text-[#FF9500] border-[rgba(255,149,0,0.3)] bg-[rgba(255,149,0,0.1)]"
+                            }`}
+                          >
+                            <option value="pendente">Pendente</option>
+                            <option value="pago">Pago</option>
+                            <option value="cancelado">Cancelado</option>
+                          </select>
+                          {recibo.status === "pago" && recibo.dataPagamento && (
+                            <span className="text-[var(--text-tertiary)] text-[10px] pl-1">
+                              {new Date(recibo.dataPagamento).toLocaleDateString("pt-BR")}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface TopbarProps {
@@ -10,7 +9,6 @@ interface TopbarProps {
 
 export default function Topbar({ userName = "Usuario", onMenuClick }: TopbarProps) {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
 
   const handleLogout = async () => {
     try {
@@ -18,13 +16,6 @@ export default function Topbar({ userName = "Usuario", onMenuClick }: TopbarProp
       router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);
-    }
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/recibos?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 
@@ -38,21 +29,7 @@ export default function Topbar({ userName = "Usuario", onMenuClick }: TopbarProp
         <span className="material-symbols-outlined">menu</span>
       </button>
 
-      {/* Search Bar */}
-      <form onSubmit={handleSearch} className="flex flex-1 max-w-[480px]">
-        <label className="flex w-full items-center rounded-xl bg-[var(--bg-tertiary)] h-10 px-4 gap-2 transition-all focus-within:ring-4 focus-within:ring-[rgba(0,174,239,0.15)] border border-[var(--border-primary)] focus-within:border-[#00AEEF]">
-          <span className="material-symbols-outlined text-[var(--text-tertiary)] text-[20px]">
-            search
-          </span>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent border-none text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] text-[14px] focus:ring-0 focus:outline-none p-0 leading-normal"
-            placeholder="Buscar recibos, clientes..."
-          />
-        </label>
-      </form>
+      <div className="flex-1" />
 
       {/* Right Actions */}
       <div className="flex items-center gap-2 ml-4">
