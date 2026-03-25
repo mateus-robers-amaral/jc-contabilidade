@@ -201,6 +201,7 @@ export default function RecibosPage() {
     const source = selectedGroup ? selectedGroup.recibos : recibos;
     const pagos = source.filter((r) => r.status === "pago");
     const pendentes = source.filter((r) => r.status === "pendente");
+    const avulsos = source.filter((r) => !r.clienteId);
     return {
       totalRecibos: source.length,
       totalGeral: source.reduce((sum, r) => sum + Number(r.total), 0),
@@ -208,6 +209,8 @@ export default function RecibosPage() {
       pagosTotal: pagos.reduce((sum, r) => sum + Number(r.total), 0),
       pendentesCount: pendentes.length,
       pendentesTotal: pendentes.reduce((sum, r) => sum + Number(r.total), 0),
+      avulsosCount: avulsos.length,
+      avulsosTotal: avulsos.reduce((sum, r) => sum + Number(r.total), 0),
       label: selectedGroup ? selectedGroup.label : "Todos os meses",
     };
   }, [recibos, monthGroups, selectedMonthKey]);
@@ -268,7 +271,9 @@ export default function RecibosPage() {
       const q = modalSearch.toLowerCase();
       items = items.filter((r) => getReciboNome(r).toLowerCase().includes(q));
     }
-    if (modalStatusFilter !== "todos") {
+    if (modalStatusFilter === "avulso") {
+      items = items.filter((r) => !r.clienteId);
+    } else if (modalStatusFilter !== "todos") {
       items = items.filter((r) => r.status === modalStatusFilter);
     }
     return sortRecibos(items);
@@ -392,18 +397,13 @@ export default function RecibosPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <button onClick={() => openKpiModal("todos")}
           className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] hover:border-[#00AEEF] hover:shadow-md transition-all cursor-pointer">
           <span className="material-symbols-outlined text-[#00AEEF] text-[28px] mb-2">receipt_long</span>
           <p className="text-[var(--text-tertiary)] text-[11px] font-semibold uppercase tracking-wider">Recibos</p>
           <p className="text-[var(--text-primary)] text-[28px] font-bold">{stats.totalRecibos}</p>
-        </button>
-        <button onClick={() => openKpiModal("todos")}
-          className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] hover:border-[#5856D6] hover:shadow-md transition-all cursor-pointer">
-          <span className="material-symbols-outlined text-[#5856D6] text-[28px] mb-2">payments</span>
-          <p className="text-[var(--text-tertiary)] text-[11px] font-semibold uppercase tracking-wider">Faturamento</p>
-          <p className="text-[var(--text-primary)] text-[24px] font-bold">{formatCurrency(stats.totalGeral)}</p>
+          <p className="text-[var(--text-tertiary)] text-[13px] mt-1">{formatCurrency(stats.totalGeral)}</p>
         </button>
         <button onClick={() => openKpiModal("pago")}
           className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[rgba(52,199,89,0.05)] border border-[rgba(52,199,89,0.2)] hover:border-[#34C759] hover:shadow-md transition-all cursor-pointer">
@@ -418,6 +418,19 @@ export default function RecibosPage() {
           <p className="text-[#FF9500] text-[11px] font-semibold uppercase tracking-wider">Pendentes</p>
           <p className="text-[var(--text-primary)] text-[28px] font-bold">{stats.pendentesCount}</p>
           <p className="text-[var(--text-tertiary)] text-[13px] mt-1">{formatCurrency(stats.pendentesTotal)}</p>
+        </button>
+        <button onClick={() => openKpiModal("avulso")}
+          className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[rgba(255,149,0,0.03)] border border-[rgba(255,149,0,0.15)] hover:border-[#FF9500] hover:shadow-md transition-all cursor-pointer">
+          <span className="material-symbols-outlined text-[#FF9500] text-[28px] mb-2">person_off</span>
+          <p className="text-[#FF9500] text-[11px] font-semibold uppercase tracking-wider">Avulsos</p>
+          <p className="text-[var(--text-primary)] text-[28px] font-bold">{stats.avulsosCount}</p>
+          <p className="text-[var(--text-tertiary)] text-[13px] mt-1">{formatCurrency(stats.avulsosTotal)}</p>
+        </button>
+        <button onClick={() => openKpiModal("cancelado")}
+          className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[rgba(255,59,48,0.05)] border border-[rgba(255,59,48,0.15)] hover:border-[#FF3B30] hover:shadow-md transition-all cursor-pointer">
+          <span className="material-symbols-outlined text-[#FF3B30] text-[28px] mb-2">cancel</span>
+          <p className="text-[#FF3B30] text-[11px] font-semibold uppercase tracking-wider">Cancelados</p>
+          <p className="text-[var(--text-primary)] text-[28px] font-bold">{recibos.filter((r) => r.status === "cancelado").length}</p>
         </button>
       </div>
 
@@ -533,7 +546,7 @@ export default function RecibosPage() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                {(["todos", "pendente", "pago", "cancelado"] as const).map((st) => (
+                {(["todos", "pendente", "pago", "cancelado", "avulso"] as const).map((st) => (
                   <button
                     key={st}
                     onClick={() => setModalStatusFilter(st)}
@@ -542,11 +555,12 @@ export default function RecibosPage() {
                         ? st === "pago" ? "bg-[#34C759] text-white"
                           : st === "pendente" ? "bg-[#FF9500] text-white"
                           : st === "cancelado" ? "bg-[#FF3B30] text-white"
+                          : st === "avulso" ? "bg-[#FF9500] text-white"
                           : "bg-[#00AEEF] text-white"
                         : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
                     }`}
                   >
-                    {st === "todos" ? "Todos" : st === "pago" ? "Pagos" : st === "pendente" ? "Pendentes" : "Cancelados"}
+                    {st === "todos" ? "Todos" : st === "pago" ? "Pagos" : st === "pendente" ? "Pendentes" : st === "cancelado" ? "Cancelados" : "Avulsos"}
                   </button>
                 ))}
               </div>
