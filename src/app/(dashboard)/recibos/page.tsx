@@ -391,50 +391,34 @@ export default function RecibosPage() {
         </div>
       </div>
 
-      {/* KPI Bar — compact, clickable */}
-      <div className="flex flex-col gap-2">
-        {selectedMonthKey && (
-          <div className="flex items-center gap-2">
-            <span className="text-[var(--text-tertiary)] text-[13px]">Filtrando por <strong className="text-[var(--text-primary)]">{stats.label}</strong></span>
-            <button onClick={() => setSelectedMonthKey(null)} className="text-[#00AEEF] text-[13px] font-medium hover:underline cursor-pointer">Limpar</button>
-          </div>
-        )}
-        <div className="flex items-stretch gap-3 overflow-x-auto pb-1">
-          <button onClick={() => openKpiModal("todos")}
-            className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[var(--surface-primary)] border border-[var(--border-primary)] hover:border-[#00AEEF] transition-all cursor-pointer shrink-0">
-            <span className="material-symbols-outlined text-[#00AEEF] text-[20px]">receipt_long</span>
-            <div className="text-left">
-              <p className="text-[var(--text-tertiary)] text-[10px] font-semibold uppercase tracking-wider">Recibos</p>
-              <p className="text-[var(--text-primary)] text-[18px] font-bold leading-tight">{stats.totalRecibos}</p>
-            </div>
-          </button>
-          <button onClick={() => openKpiModal("todos")}
-            className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[var(--surface-primary)] border border-[var(--border-primary)] hover:border-[#5856D6] transition-all cursor-pointer shrink-0">
-            <span className="material-symbols-outlined text-[#5856D6] text-[20px]">payments</span>
-            <div className="text-left">
-              <p className="text-[var(--text-tertiary)] text-[10px] font-semibold uppercase tracking-wider">Faturamento</p>
-              <p className="text-[var(--text-primary)] text-[18px] font-bold leading-tight">{formatCurrency(stats.totalGeral)}</p>
-            </div>
-          </button>
-          <button onClick={() => openKpiModal("pago")}
-            className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[rgba(52,199,89,0.06)] border border-[rgba(52,199,89,0.2)] hover:border-[#34C759] transition-all cursor-pointer shrink-0">
-            <span className="material-symbols-outlined text-[#34C759] text-[20px]">check_circle</span>
-            <div className="text-left">
-              <p className="text-[#34C759] text-[10px] font-semibold uppercase tracking-wider">Pagos</p>
-              <p className="text-[var(--text-primary)] text-[18px] font-bold leading-tight">{stats.pagosCount}</p>
-            </div>
-            <span className="text-[var(--text-tertiary)] text-[12px] font-medium ml-1">{formatCurrency(stats.pagosTotal)}</span>
-          </button>
-          <button onClick={() => openKpiModal("pendente")}
-            className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[rgba(255,149,0,0.06)] border border-[rgba(255,149,0,0.2)] hover:border-[#FF9500] transition-all cursor-pointer shrink-0">
-            <span className="material-symbols-outlined text-[#FF9500] text-[20px]">schedule</span>
-            <div className="text-left">
-              <p className="text-[#FF9500] text-[10px] font-semibold uppercase tracking-wider">Pendentes</p>
-              <p className="text-[var(--text-primary)] text-[18px] font-bold leading-tight">{stats.pendentesCount}</p>
-            </div>
-            <span className="text-[var(--text-tertiary)] text-[12px] font-medium ml-1">{formatCurrency(stats.pendentesTotal)}</span>
-          </button>
-        </div>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <button onClick={() => openKpiModal("todos")}
+          className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] hover:border-[#00AEEF] hover:shadow-md transition-all cursor-pointer">
+          <span className="material-symbols-outlined text-[#00AEEF] text-[28px] mb-2">receipt_long</span>
+          <p className="text-[var(--text-tertiary)] text-[11px] font-semibold uppercase tracking-wider">Recibos</p>
+          <p className="text-[var(--text-primary)] text-[28px] font-bold">{stats.totalRecibos}</p>
+        </button>
+        <button onClick={() => openKpiModal("todos")}
+          className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] hover:border-[#5856D6] hover:shadow-md transition-all cursor-pointer">
+          <span className="material-symbols-outlined text-[#5856D6] text-[28px] mb-2">payments</span>
+          <p className="text-[var(--text-tertiary)] text-[11px] font-semibold uppercase tracking-wider">Faturamento</p>
+          <p className="text-[var(--text-primary)] text-[24px] font-bold">{formatCurrency(stats.totalGeral)}</p>
+        </button>
+        <button onClick={() => openKpiModal("pago")}
+          className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[rgba(52,199,89,0.05)] border border-[rgba(52,199,89,0.2)] hover:border-[#34C759] hover:shadow-md transition-all cursor-pointer">
+          <span className="material-symbols-outlined text-[#34C759] text-[28px] mb-2">check_circle</span>
+          <p className="text-[#34C759] text-[11px] font-semibold uppercase tracking-wider">Pagos</p>
+          <p className="text-[var(--text-primary)] text-[28px] font-bold">{stats.pagosCount}</p>
+          <p className="text-[var(--text-tertiary)] text-[13px] mt-1">{formatCurrency(stats.pagosTotal)}</p>
+        </button>
+        <button onClick={() => openKpiModal("pendente")}
+          className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[rgba(255,149,0,0.05)] border border-[rgba(255,149,0,0.2)] hover:border-[#FF9500] hover:shadow-md transition-all cursor-pointer">
+          <span className="material-symbols-outlined text-[#FF9500] text-[28px] mb-2">schedule</span>
+          <p className="text-[#FF9500] text-[11px] font-semibold uppercase tracking-wider">Pendentes</p>
+          <p className="text-[var(--text-primary)] text-[28px] font-bold">{stats.pendentesCount}</p>
+          <p className="text-[var(--text-tertiary)] text-[13px] mt-1">{formatCurrency(stats.pendentesTotal)}</p>
+        </button>
       </div>
 
       {/* Months List */}
@@ -458,17 +442,16 @@ export default function RecibosPage() {
             return (
               <div
                 key={group.key}
-                className={`flex items-center gap-4 px-5 py-3.5 rounded-xl border transition-all cursor-pointer group ${
+                onClick={() => setSelectedMonthKey(isSelected ? null : group.key)}
+                onDoubleClick={() => openMonth(group)}
+                className={`flex items-center gap-4 px-5 py-3.5 rounded-xl border transition-all cursor-pointer select-none ${
                   isSelected
                     ? "border-[#00AEEF] bg-[rgba(0,174,239,0.04)] ring-1 ring-[rgba(0,174,239,0.1)]"
                     : "border-[var(--border-primary)] bg-[var(--surface-primary)] hover:border-[var(--text-tertiary)]"
                 }`}
               >
                 {/* Month badge */}
-                <div
-                  onClick={() => setSelectedMonthKey(isSelected ? null : group.key)}
-                  className="flex items-center justify-center size-11 rounded-lg bg-[#2E3192] shrink-0"
-                >
+                <div className="flex items-center justify-center size-11 rounded-lg bg-[#2E3192] shrink-0">
                   <div className="text-center leading-none">
                     <p className="text-white text-[11px] font-bold">{MESES[mesNum - 1]?.substring(0, 3).toUpperCase()}</p>
                     <p className="text-white/60 text-[9px]">{group.key.split("-")[0]}</p>
@@ -476,7 +459,7 @@ export default function RecibosPage() {
                 </div>
 
                 {/* Info */}
-                <div className="flex-1 min-w-0" onClick={() => setSelectedMonthKey(isSelected ? null : group.key)}>
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-[var(--text-primary)] text-[14px] font-semibold">{group.label}</p>
                     <span className="text-[var(--text-tertiary)] text-[11px]">{group.recibos.length} recibo{group.recibos.length !== 1 ? "s" : ""}</span>
@@ -507,14 +490,6 @@ export default function RecibosPage() {
 
                 {/* Total */}
                 <p className="text-[var(--text-primary)] text-[15px] font-bold shrink-0 min-w-[100px] text-right">{formatCurrency(group.total)}</p>
-
-                {/* Open button */}
-                <button
-                  onClick={() => openMonth(group)}
-                  className="size-9 rounded-lg flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#00AEEF] hover:bg-[rgba(0,174,239,0.1)] transition-colors shrink-0"
-                >
-                  <span className="material-symbols-outlined text-[20px]">open_in_new</span>
-                </button>
               </div>
             );
           })}
