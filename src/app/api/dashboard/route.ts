@@ -81,6 +81,8 @@ export async function GET() {
           total: Number(r.total),
           status: r.status,
           cliente: r.cliente,
+          avulsoNome: r.avulsoNome,
+          clienteId: r.clienteId,
         })),
       },
     });

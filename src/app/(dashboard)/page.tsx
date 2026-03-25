@@ -16,7 +16,9 @@ interface DashboardData {
     mesReferencia: string;
     total: number;
     status: string;
-    cliente: { nome: string };
+    cliente: { nome: string } | null;
+    avulsoNome: string | null;
+    clienteId: string | null;
   }[];
 }
 
@@ -239,12 +241,17 @@ export default function DashboardPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center size-11 rounded-xl bg-gradient-to-br from-[#00AEEF] to-[#2E3192] text-white font-bold text-[13px]">
-                            {getInitials(recibo.cliente.nome)}
+                          <div className={`flex items-center justify-center size-11 rounded-xl text-white font-bold text-[13px] ${!recibo.clienteId ? "bg-gradient-to-br from-[#FF9500] to-[#FF6B00]" : "bg-gradient-to-br from-[#00AEEF] to-[#2E3192]"}`}>
+                            {getInitials(recibo.cliente?.nome || recibo.avulsoNome || "?")}
                           </div>
-                          <span className="text-[var(--text-primary)] text-[14px] font-medium">
-                            {recibo.cliente.nome}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[var(--text-primary)] text-[14px] font-medium">
+                              {recibo.cliente?.nome || recibo.avulsoNome || "Cliente removido"}
+                            </span>
+                            {!recibo.clienteId && (
+                              <span className="px-1.5 py-0.5 rounded bg-[rgba(255,149,0,0.15)] text-[#FF9500] text-[9px] font-bold uppercase">Avulso</span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
