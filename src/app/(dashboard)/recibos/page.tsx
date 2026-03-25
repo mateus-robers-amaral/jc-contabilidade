@@ -213,7 +213,6 @@ export default function RecibosPage() {
   }, [recibos, monthGroups, selectedMonthKey]);
 
   const openMonth = (group: MonthGroup) => {
-    setSelectedMonthKey(group.key);
     setOpenMonthGroup(group);
     setModalSearch("");
     setModalStatusFilter("todos");
@@ -223,8 +222,21 @@ export default function RecibosPage() {
     setOpenMonthGroup(null);
   };
 
-  // Sort state for table columns
-  const [sortColumn, setSortColumn] = useState<"cliente" | "valor" | "status" | null>(null);
+  // Open modal from KPI click — shows all recibos (or selected month) filtered by status
+  const openKpiModal = (statusFilter: string) => {
+    const selectedGroup = selectedMonthKey
+      ? monthGroups.find((g) => g.key === selectedMonthKey)
+      : null;
+    const source = selectedGroup
+      ? selectedGroup
+      : { key: "all", label: "Todos os meses", recibos, total: 0, pagos: 0, pendentes: 0, cancelados: 0 };
+    setOpenMonthGroup(source as MonthGroup);
+    setModalSearch("");
+    setModalStatusFilter(statusFilter);
+  };
+
+  // Sort state for table columns — default: alphabetical by client
+  const [sortColumn, setSortColumn] = useState<"cliente" | "valor" | "status">("cliente");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const handleSort = (col: "cliente" | "valor" | "status") => {
     if (sortColumn === col) {
@@ -235,7 +247,6 @@ export default function RecibosPage() {
     }
   };
   const sortRecibos = useCallback((items: Recibo[]) => {
-    if (!sortColumn) return items;
     const sorted = [...items].sort((a, b) => {
       if (sortColumn === "cliente") {
         return getReciboNome(a).localeCompare(getReciboNome(b), "pt-BR");
@@ -380,49 +391,53 @@ export default function RecibosPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* KPI Bar — compact, clickable */}
       <div className="flex flex-col gap-2">
         {selectedMonthKey && (
           <div className="flex items-center gap-2">
-            <span className="text-[var(--text-tertiary)] text-[13px]">Exibindo KPIs de <strong className="text-[var(--text-primary)]">{stats.label}</strong></span>
-            <button onClick={() => setSelectedMonthKey(null)} className="text-[#00AEEF] text-[13px] font-medium hover:underline cursor-pointer">Ver total</button>
+            <span className="text-[var(--text-tertiary)] text-[13px]">Filtrando por <strong className="text-[var(--text-primary)]">{stats.label}</strong></span>
+            <button onClick={() => setSelectedMonthKey(null)} className="text-[#00AEEF] text-[13px] font-medium hover:underline cursor-pointer">Limpar</button>
           </div>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="flex flex-col p-5 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm">
-            <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(0,174,239,0.1)] mb-3">
-              <span className="material-symbols-outlined text-[#00AEEF] text-[22px]">receipt_long</span>
+        <div className="flex items-stretch gap-3 overflow-x-auto pb-1">
+          <button onClick={() => openKpiModal("todos")}
+            className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[var(--surface-primary)] border border-[var(--border-primary)] hover:border-[#00AEEF] transition-all cursor-pointer shrink-0">
+            <span className="material-symbols-outlined text-[#00AEEF] text-[20px]">receipt_long</span>
+            <div className="text-left">
+              <p className="text-[var(--text-tertiary)] text-[10px] font-semibold uppercase tracking-wider">Recibos</p>
+              <p className="text-[var(--text-primary)] text-[18px] font-bold leading-tight">{stats.totalRecibos}</p>
             </div>
-            <p className="text-[var(--text-tertiary)] text-[12px] font-medium uppercase tracking-wide">Total de Recibos</p>
-            <p className="text-[var(--text-primary)] text-[24px] font-bold">{stats.totalRecibos}</p>
-          </div>
-          <div className="flex flex-col p-5 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm">
-            <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(88,86,214,0.1)] mb-3">
-              <span className="material-symbols-outlined text-[#5856D6] text-[22px]">payments</span>
+          </button>
+          <button onClick={() => openKpiModal("todos")}
+            className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[var(--surface-primary)] border border-[var(--border-primary)] hover:border-[#5856D6] transition-all cursor-pointer shrink-0">
+            <span className="material-symbols-outlined text-[#5856D6] text-[20px]">payments</span>
+            <div className="text-left">
+              <p className="text-[var(--text-tertiary)] text-[10px] font-semibold uppercase tracking-wider">Faturamento</p>
+              <p className="text-[var(--text-primary)] text-[18px] font-bold leading-tight">{formatCurrency(stats.totalGeral)}</p>
             </div>
-            <p className="text-[var(--text-tertiary)] text-[12px] font-medium uppercase tracking-wide">Faturamento Total</p>
-            <p className="text-[var(--text-primary)] text-[24px] font-bold">{formatCurrency(stats.totalGeral)}</p>
-          </div>
-          <div className="flex flex-col p-5 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm">
-            <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(52,199,89,0.1)] mb-3">
-              <span className="material-symbols-outlined text-[#34C759] text-[22px]">check_circle</span>
+          </button>
+          <button onClick={() => openKpiModal("pago")}
+            className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[rgba(52,199,89,0.06)] border border-[rgba(52,199,89,0.2)] hover:border-[#34C759] transition-all cursor-pointer shrink-0">
+            <span className="material-symbols-outlined text-[#34C759] text-[20px]">check_circle</span>
+            <div className="text-left">
+              <p className="text-[#34C759] text-[10px] font-semibold uppercase tracking-wider">Pagos</p>
+              <p className="text-[var(--text-primary)] text-[18px] font-bold leading-tight">{stats.pagosCount}</p>
             </div>
-            <p className="text-[var(--text-tertiary)] text-[12px] font-medium uppercase tracking-wide">Pagos</p>
-            <p className="text-[var(--text-primary)] text-[24px] font-bold">{stats.pagosCount}</p>
-            <p className="text-[var(--text-tertiary)] text-[12px] mt-1">{formatCurrency(stats.pagosTotal)}</p>
-          </div>
-          <div className="flex flex-col p-5 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] shadow-sm">
-            <div className="flex items-center justify-center size-10 rounded-xl bg-[rgba(255,149,0,0.1)] mb-3">
-              <span className="material-symbols-outlined text-[#FF9500] text-[22px]">schedule</span>
+            <span className="text-[var(--text-tertiary)] text-[12px] font-medium ml-1">{formatCurrency(stats.pagosTotal)}</span>
+          </button>
+          <button onClick={() => openKpiModal("pendente")}
+            className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[rgba(255,149,0,0.06)] border border-[rgba(255,149,0,0.2)] hover:border-[#FF9500] transition-all cursor-pointer shrink-0">
+            <span className="material-symbols-outlined text-[#FF9500] text-[20px]">schedule</span>
+            <div className="text-left">
+              <p className="text-[#FF9500] text-[10px] font-semibold uppercase tracking-wider">Pendentes</p>
+              <p className="text-[var(--text-primary)] text-[18px] font-bold leading-tight">{stats.pendentesCount}</p>
             </div>
-            <p className="text-[var(--text-tertiary)] text-[12px] font-medium uppercase tracking-wide">Pendentes</p>
-            <p className="text-[var(--text-primary)] text-[24px] font-bold">{stats.pendentesCount}</p>
-            <p className="text-[var(--text-tertiary)] text-[12px] mt-1">{formatCurrency(stats.pendentesTotal)}</p>
-          </div>
+            <span className="text-[var(--text-tertiary)] text-[12px] font-medium ml-1">{formatCurrency(stats.pendentesTotal)}</span>
+          </button>
         </div>
       </div>
 
-      {/* Month Cards */}
+      {/* Months List */}
       {loading ? (
         <div className="flex justify-center py-16">
           <span className="material-symbols-outlined animate-spin text-[#00AEEF] text-[32px]">progress_activity</span>
@@ -435,45 +450,72 @@ export default function RecibosPage() {
           <p className="text-[var(--text-tertiary)] text-[15px]">Nenhum recibo encontrado</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="flex flex-col gap-2">
           {monthGroups.map((group) => {
             const isSelected = selectedMonthKey === group.key;
             const mesNum = parseInt(group.key.split("-")[1]);
+            const percentPago = group.recibos.length > 0 ? Math.round((group.pagos / group.recibos.length) * 100) : 0;
             return (
-              <button
+              <div
                 key={group.key}
-                onClick={() => openMonth(group)}
-                className={`flex flex-col p-5 rounded-2xl border text-left transition-all cursor-pointer hover:shadow-md ${
+                className={`flex items-center gap-4 px-5 py-3.5 rounded-xl border transition-all cursor-pointer group ${
                   isSelected
-                    ? "border-[#00AEEF] bg-[rgba(0,174,239,0.05)] ring-2 ring-[rgba(0,174,239,0.15)]"
-                    : "border-[var(--border-primary)] bg-[var(--surface-primary)] hover:border-[#00AEEF]"
+                    ? "border-[#00AEEF] bg-[rgba(0,174,239,0.04)] ring-1 ring-[rgba(0,174,239,0.1)]"
+                    : "border-[var(--border-primary)] bg-[var(--surface-primary)] hover:border-[var(--text-tertiary)]"
                 }`}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex items-center justify-center size-10 rounded-xl bg-[#2E3192]">
-                    <span className="text-white text-[13px] font-bold">{MESES[mesNum - 1]?.substring(0, 3).toUpperCase()}</span>
-                  </div>
-                  <div>
-                    <p className="text-[var(--text-primary)] text-[15px] font-bold leading-tight">{MESES[mesNum - 1]}</p>
-                    <p className="text-[var(--text-tertiary)] text-[11px]">{group.key.split("-")[0]}</p>
+                {/* Month badge */}
+                <div
+                  onClick={() => setSelectedMonthKey(isSelected ? null : group.key)}
+                  className="flex items-center justify-center size-11 rounded-lg bg-[#2E3192] shrink-0"
+                >
+                  <div className="text-center leading-none">
+                    <p className="text-white text-[11px] font-bold">{MESES[mesNum - 1]?.substring(0, 3).toUpperCase()}</p>
+                    <p className="text-white/60 text-[9px]">{group.key.split("-")[0]}</p>
                   </div>
                 </div>
-                <p className="text-[#00AEEF] text-[18px] font-bold mb-2">{formatCurrency(group.total)}</p>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#34C759]">
+
+                {/* Info */}
+                <div className="flex-1 min-w-0" onClick={() => setSelectedMonthKey(isSelected ? null : group.key)}>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[var(--text-primary)] text-[14px] font-semibold">{group.label}</p>
+                    <span className="text-[var(--text-tertiary)] text-[11px]">{group.recibos.length} recibo{group.recibos.length !== 1 ? "s" : ""}</span>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <div className="flex-1 h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#34C759] rounded-full transition-all" style={{ width: `${percentPago}%` }} />
+                    </div>
+                    <span className="text-[var(--text-tertiary)] text-[10px] font-medium shrink-0">{percentPago}%</span>
+                  </div>
+                </div>
+
+                {/* Status pills */}
+                <div className="hidden sm:flex items-center gap-2 shrink-0">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[rgba(52,199,89,0.1)] text-[#34C759] text-[11px] font-semibold">
                     <span className="size-1.5 rounded-full bg-[#34C759]" />{group.pagos}
                   </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#FF9500]">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[rgba(255,149,0,0.1)] text-[#FF9500] text-[11px] font-semibold">
                     <span className="size-1.5 rounded-full bg-[#FF9500]" />{group.pendentes}
                   </span>
                   {group.cancelados > 0 && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#FF3B30]">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[rgba(255,59,48,0.1)] text-[#FF3B30] text-[11px] font-semibold">
                       <span className="size-1.5 rounded-full bg-[#FF3B30]" />{group.cancelados}
                     </span>
                   )}
-                  <span className="text-[var(--text-tertiary)] text-[11px] ml-auto">{group.recibos.length} recibo{group.recibos.length !== 1 ? "s" : ""}</span>
                 </div>
-              </button>
+
+                {/* Total */}
+                <p className="text-[var(--text-primary)] text-[15px] font-bold shrink-0 min-w-[100px] text-right">{formatCurrency(group.total)}</p>
+
+                {/* Open button */}
+                <button
+                  onClick={() => openMonth(group)}
+                  className="size-9 rounded-lg flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#00AEEF] hover:bg-[rgba(0,174,239,0.1)] transition-colors shrink-0"
+                >
+                  <span className="material-symbols-outlined text-[20px]">open_in_new</span>
+                </button>
+              </div>
             );
           })}
         </div>
