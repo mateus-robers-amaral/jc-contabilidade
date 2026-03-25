@@ -7,408 +7,108 @@ import {
   Image,
 } from "@react-pdf/renderer";
 
-const DARK = "#111827";
+const DARK = "#1a1a2e";
 const GRAY = "#6b7280";
-const LIGHT_GRAY = "#f3f4f6";
-const BORDER = "#d1d5db";
-const ACCENT = "#00AEEF";
+const LIGHT = "#f8f9fa";
+const BORDER = "#e2e5ea";
+const ACCENT = "#2E3192";
+const BLUE = "#00AEEF";
 
-const styles = StyleSheet.create({
-  page: {
-    padding: 0,
-    fontFamily: "Helvetica",
-    fontSize: 10,
-    color: DARK,
-    backgroundColor: "#ffffff",
-  },
+const s = StyleSheet.create({
+  page: { padding: 0, fontFamily: "Helvetica", fontSize: 10, color: DARK, backgroundColor: "#fff" },
 
-  // === THIN TOP LINE ===
-  topLine: {
-    height: 2,
-    backgroundColor: BORDER,
-  },
+  /* ── Accent bar ── */
+  accentBar: { height: 4, backgroundColor: ACCENT },
 
-  // === CONTENT AREA ===
-  content: {
-    paddingHorizontal: 40,
-    paddingTop: 20,
-    paddingBottom: 90,
-  },
+  /* ── Content ── */
+  content: { paddingHorizontal: 44, paddingTop: 24, paddingBottom: 100 },
 
-  // === HEADER ===
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 16,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  logoImage: {
-    width: 44,
-    height: 44,
-    objectFit: "contain",
-  },
-  companyInfo: {
-    flexDirection: "column",
-  },
-  companyName: {
-    fontSize: 15,
-    fontFamily: "Helvetica-Bold",
-    color: ACCENT,
-    letterSpacing: 0.5,
-  },
-  companySubtitle: {
-    fontSize: 8,
-    color: GRAY,
-    marginTop: 2,
-    letterSpacing: 0.3,
-  },
-  headerRight: {
-    alignItems: "flex-end",
-  },
-  receiptTitle: {
-    fontSize: 11,
-    fontFamily: "Helvetica-Bold",
-    color: DARK,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
-  receiptNumber: {
-    fontSize: 9,
-    color: GRAY,
-    marginTop: 3,
-    textAlign: "right",
-  },
+  /* ── Header ── */
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 },
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
+  logo: { width: 42, height: 42, objectFit: "contain" },
+  companyName: { fontSize: 14, fontFamily: "Helvetica-Bold", color: ACCENT, letterSpacing: 0.3 },
+  companySub: { fontSize: 7.5, color: GRAY, marginTop: 1, letterSpacing: 0.4, textTransform: "uppercase" },
+  headerRight: { alignItems: "flex-end" },
+  docTitle: { fontSize: 13, fontFamily: "Helvetica-Bold", color: DARK, letterSpacing: 0.3 },
+  docMeta: { fontSize: 8, color: GRAY, marginTop: 3, textAlign: "right" },
 
-  // === DIVIDER ===
-  divider: {
-    height: 1,
-    backgroundColor: BORDER,
-    marginBottom: 14,
-  },
+  /* ── Divider ── */
+  hr: { height: 1, backgroundColor: BORDER, marginVertical: 14 },
 
-  // === RECEBEMOS DE BOX ===
-  recebemosBox: {
-    borderWidth: 1,
-    borderColor: BORDER,
-    marginBottom: 14,
-  },
-  recebemosRow: {
-    flexDirection: "row",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
-  },
-  recebemosRowLast: {
-    borderBottomWidth: 0,
-  },
-  recebemosLabel: {
-    fontSize: 9,
-    fontFamily: "Helvetica-Bold",
-    color: GRAY,
-    width: 110,
-  },
-  recebemosValue: {
-    fontSize: 10,
-    fontFamily: "Helvetica-Bold",
-    color: DARK,
-    flex: 1,
-  },
-  recebemosValueNormal: {
-    fontSize: 10,
-    color: DARK,
-    flex: 1,
-  },
-  recebemosValueAccent: {
-    fontSize: 11,
-    fontFamily: "Helvetica-Bold",
-    color: ACCENT,
-    flex: 1,
-  },
+  /* ── Client card ── */
+  clientCard: { backgroundColor: LIGHT, borderRadius: 4, padding: 14, marginBottom: 16 },
+  clientTitle: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: GRAY, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 },
+  clientRow: { flexDirection: "row", marginBottom: 4 },
+  clientLabel: { fontSize: 8.5, color: GRAY, width: 95 },
+  clientValue: { fontSize: 9.5, color: DARK, flex: 1 },
+  clientValueBold: { fontSize: 10, fontFamily: "Helvetica-Bold", color: DARK, flex: 1 },
 
-  // === TABLE ===
-  sectionLabel: {
-    fontSize: 9,
-    fontFamily: "Helvetica-Bold",
-    color: DARK,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 6,
-  },
-  table: {
-    borderWidth: 1,
-    borderColor: BORDER,
-    marginBottom: 14,
-  },
-  tableHeader: {
-    flexDirection: "row",
-    backgroundColor: LIGHT_GRAY,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
-  },
-  tableHeaderText: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Bold",
-    color: DARK,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  tableRow: {
-    flexDirection: "row",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
-  },
-  tableRowLast: {
-    borderBottomWidth: 0,
-  },
-  descCol: {
-    flex: 3,
-  },
-  valCol: {
-    flex: 1,
-    textAlign: "right",
-  },
-  rowText: {
-    fontSize: 10,
-    color: DARK,
-  },
-  rowValue: {
-    fontSize: 10,
-    color: DARK,
-  },
-  totalRow: {
-    flexDirection: "row",
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    borderTopWidth: 1,
-    borderTopColor: BORDER,
-    backgroundColor: LIGHT_GRAY,
-  },
-  totalLabel: {
-    flex: 3,
-    fontSize: 10,
-    fontFamily: "Helvetica-Bold",
-    color: DARK,
-    textTransform: "uppercase",
-  },
-  totalValue: {
-    flex: 1,
-    fontSize: 11,
-    fontFamily: "Helvetica-Bold",
-    color: ACCENT,
-    textAlign: "right",
-  },
+  /* ── Reference bar ── */
+  refBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: ACCENT, borderRadius: 4, padding: 12, marginBottom: 16 },
+  refLabel: { fontSize: 8, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: 0.8 },
+  refValue: { fontSize: 11, fontFamily: "Helvetica-Bold", color: "#fff", marginTop: 1 },
 
-  // === PIX PAYMENT SECTION ===
-  pixSection: {
-    flexDirection: "row",
-    borderWidth: 1,
-    borderColor: BORDER,
-    marginBottom: 14,
-  },
-  pixLeft: {
-    flex: 1,
-    padding: 12,
-  },
-  pixTitle: {
-    fontSize: 10,
-    fontFamily: "Helvetica-Bold",
-    color: DARK,
-    marginBottom: 8,
-  },
-  pixStep: {
-    fontSize: 8,
-    color: GRAY,
-    marginBottom: 3,
-    lineHeight: 1.3,
-  },
-  pixKeyBox: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: BORDER,
-    padding: 8,
-  },
-  pixKeyLabel: {
-    fontSize: 7,
-    fontFamily: "Helvetica-Bold",
-    color: GRAY,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 3,
-  },
-  pixKeyValue: {
-    fontSize: 11,
-    fontFamily: "Helvetica-Bold",
-    color: DARK,
-  },
-  pixBeneficiário: {
-    fontSize: 9,
-    color: GRAY,
-    marginTop: 6,
-  },
-  pixRight: {
-    width: 140,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 10,
-    borderLeftWidth: 1,
-    borderLeftColor: BORDER,
-  },
-  qrImage: {
-    width: 95,
-    height: 95,
-  },
-  qrLabel: {
-    fontSize: 8,
-    color: GRAY,
-    marginTop: 8,
-    textAlign: "center",
-  },
-  qrAmount: {
-    fontSize: 10,
-    fontFamily: "Helvetica-Bold",
-    color: DARK,
-    marginTop: 2,
-    textAlign: "center",
-  },
+  /* ── Table ── */
+  tableLabel: { fontSize: 8, fontFamily: "Helvetica-Bold", color: DARK, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 },
+  table: { borderWidth: 1, borderColor: BORDER, borderRadius: 4, overflow: "hidden", marginBottom: 16 },
+  tHead: { flexDirection: "row", backgroundColor: LIGHT, paddingVertical: 7, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: BORDER },
+  tHeadText: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: GRAY, textTransform: "uppercase", letterSpacing: 0.6 },
+  tRow: { flexDirection: "row", paddingVertical: 7, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: BORDER },
+  tRowLast: { borderBottomWidth: 0 },
+  tRowAlt: { backgroundColor: "#fafbfc" },
+  descCol: { flex: 3 },
+  valCol: { flex: 1, textAlign: "right" },
+  cellText: { fontSize: 9.5, color: DARK },
+  cellValue: { fontSize: 9.5, color: DARK },
+  tTotal: { flexDirection: "row", paddingVertical: 9, paddingHorizontal: 14, backgroundColor: ACCENT },
+  tTotalLabel: { flex: 3, fontSize: 9.5, fontFamily: "Helvetica-Bold", color: "#fff", textTransform: "uppercase", letterSpacing: 0.5 },
+  tTotalValue: { flex: 1, fontSize: 11, fontFamily: "Helvetica-Bold", color: "#fff", textAlign: "right" },
 
-  // === DETAILS / OBSERVATIONS ===
-  detailsBox: {
-    borderWidth: 1,
-    borderColor: BORDER,
-    padding: 10,
-    marginBottom: 14,
-  },
-  detailsTitle: {
-    fontSize: 9,
-    fontFamily: "Helvetica-Bold",
-    color: DARK,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-    marginBottom: 5,
-  },
-  detailsText: {
-    fontSize: 9,
-    color: DARK,
-    lineHeight: 1.5,
-  },
+  /* ── Resumo textual ── */
+  resumeBox: { borderLeftWidth: 3, borderLeftColor: BLUE, backgroundColor: LIGHT, borderRadius: 2, paddingVertical: 10, paddingHorizontal: 14, marginBottom: 16 },
+  resumeText: { fontSize: 9, color: DARK, lineHeight: 1.6 },
+  resumeBold: { fontFamily: "Helvetica-Bold" },
 
-  // === VALOR POR EXTENSO ===
-  valorExtensoBox: {
-    borderWidth: 1,
-    borderColor: BORDER,
-    padding: 10,
-    marginBottom: 14,
-    backgroundColor: LIGHT_GRAY,
-  },
-  valorExtensoText: {
-    fontSize: 10,
-    color: DARK,
-  },
-  valorExtensoBold: {
-    fontSize: 10,
-    fontFamily: "Helvetica-Bold",
-    color: DARK,
-  },
+  /* ── Observações ── */
+  obsBox: { borderWidth: 1, borderColor: BORDER, borderRadius: 4, padding: 12, marginBottom: 16 },
+  obsTitle: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: GRAY, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5 },
+  obsText: { fontSize: 9, color: DARK, lineHeight: 1.5 },
 
-  // === SIGNATURE ===
-  signatureArea: {
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 0,
-  },
-  signatureLocal: {
-    fontSize: 9,
-    color: DARK,
-    marginBottom: 30,
-  },
-  signatureLine: {
-    width: 260,
-    borderTopWidth: 1,
-    borderTopColor: DARK,
-    marginBottom: 6,
-  },
-  signatureName: {
-    fontSize: 10,
-    fontFamily: "Helvetica-Bold",
-    color: DARK,
-    textAlign: "center",
-  },
-  signatureRole: {
-    fontSize: 8,
-    color: GRAY,
-    marginTop: 2,
-    textAlign: "center",
-  },
+  /* ── PIX ── */
+  pixBox: { flexDirection: "row", borderWidth: 1, borderColor: BORDER, borderRadius: 4, overflow: "hidden", marginBottom: 16 },
+  pixLeft: { flex: 1, padding: 14 },
+  pixTitle: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: DARK, marginBottom: 8 },
+  pixStep: { fontSize: 8, color: GRAY, marginBottom: 2.5, lineHeight: 1.3 },
+  pixKeyCard: { marginTop: 8, backgroundColor: LIGHT, borderRadius: 3, padding: 10 },
+  pixKeyType: { fontSize: 7, fontFamily: "Helvetica-Bold", color: GRAY, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 3 },
+  pixKeyVal: { fontSize: 10.5, fontFamily: "Helvetica-Bold", color: DARK },
+  pixBenef: { fontSize: 8, color: GRAY, marginTop: 4 },
+  pixRight: { width: 135, alignItems: "center", justifyContent: "center", padding: 12, borderLeftWidth: 1, borderLeftColor: BORDER, backgroundColor: LIGHT },
+  qr: { width: 90, height: 90 },
+  qrCaption: { fontSize: 7.5, color: GRAY, marginTop: 6, textAlign: "center" },
+  qrAmount: { fontSize: 10, fontFamily: "Helvetica-Bold", color: ACCENT, marginTop: 2, textAlign: "center" },
 
-  // === FOOTER ===
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 40,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: BORDER,
-    backgroundColor: "#ffffff",
-  },
-  footerTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  footerCol: {
-    flexDirection: "column",
-    gap: 3,
-  },
-  footerItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  footerLabel: {
-    fontSize: 7,
-    fontFamily: "Helvetica-Bold",
-    color: GRAY,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  footerValue: {
-    fontSize: 8,
-    color: DARK,
-  },
-  footerDivider: {
-    height: 1,
-    backgroundColor: BORDER,
-    marginBottom: 4,
-  },
-  footerBottom: {
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  footerCompany: {
-    fontSize: 7,
-    color: GRAY,
-    letterSpacing: 0.3,
-    textAlign: "center",
-  },
+  /* ── Assinatura ── */
+  sigArea: { alignItems: "center", marginTop: 24 },
+  sigLocal: { fontSize: 8.5, color: GRAY, marginBottom: 32 },
+  sigLine: { width: 240, borderTopWidth: 1, borderTopColor: DARK, marginBottom: 6 },
+  sigName: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: DARK, textAlign: "center" },
+  sigRole: { fontSize: 7.5, color: GRAY, marginTop: 2, textAlign: "center" },
+
+  /* ── Footer ── */
+  footer: { position: "absolute", bottom: 0, left: 0, right: 0, paddingHorizontal: 44, paddingVertical: 10, borderTopWidth: 1, borderTopColor: BORDER, backgroundColor: "#fff" },
+  footerRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 5 },
+  footerCol: { flexDirection: "column", gap: 2.5 },
+  footerItem: { flexDirection: "row", alignItems: "center", gap: 3 },
+  footerLbl: { fontSize: 6.5, fontFamily: "Helvetica-Bold", color: GRAY, textTransform: "uppercase", letterSpacing: 0.4 },
+  footerVal: { fontSize: 7.5, color: DARK },
+  footerDiv: { height: 1, backgroundColor: BORDER, marginBottom: 4 },
+  footerCenter: { flexDirection: "row", justifyContent: "center" },
+  footerFine: { fontSize: 6.5, color: GRAY, letterSpacing: 0.2, textAlign: "center" },
 });
 
-interface PixInfo {
-  chave: string;
-  nomeBeneficiario: string;
-  tipo: string;
-}
+interface PixInfo { chave: string; nomeBeneficiario: string; tipo: string }
 
 interface ReciboPDFProps {
   recibo: {
@@ -423,12 +123,7 @@ interface ReciboPDFProps {
     total: number;
     detalhamento: string | null;
     createdAt: Date;
-    cliente?: {
-      nome: string;
-      cnpj: string;
-      email: string | null;
-      responsavel: string | null;
-    } | null;
+    cliente?: { nome: string; cnpj: string; email: string | null; responsavel: string | null } | null;
     avulsoNome?: string | null;
     avulsoCnpj?: string | null;
   };
@@ -438,260 +133,224 @@ interface ReciboPDFProps {
   whatsappIconSrc?: string | null;
 }
 
-function formatCurrency(value: number): string {
-  return `R$ ${value.toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+function fmt(v: number) {
+  return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function formatDocument(doc: string): { label: string; formatted: string } {
-  const digits = doc.replace(/\D/g, "");
-  if (digits.length <= 11) {
-    const f = digits.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
-    return { label: "CPF", formatted: f };
-  }
-  const f = digits.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
-  return { label: "CNPJ", formatted: f };
+function fmtDoc(doc: string) {
+  const d = doc.replace(/\D/g, "");
+  if (d.length <= 11) return { label: "CPF", formatted: d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4") };
+  return { label: "CNPJ", formatted: d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5") };
 }
 
-function formatMonthYear(date: Date): string {
-  const months = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-  ];
+function fmtMes(date: Date) {
+  const m = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   const d = new Date(date);
-  return `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+  return `${m[d.getUTCMonth()]} de ${d.getUTCFullYear()}`;
 }
 
-function pixKeyTypeLabel(type: string): string {
-  const labels: Record<string, string> = {
-    cpf: "CPF",
-    cnpj: "CNPJ",
-    email: "E-MAIL",
-    phone: "TELEFONE",
-    random: "CHAVE ALEATÓRIA",
-  };
-  return labels[type] || type.toUpperCase();
+function fmtData(date: Date) {
+  return new Date(date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 }
 
-function formatDateBR(date: Date): string {
-  const d = new Date(date);
-  return d.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+function pixTypeLabel(t: string) {
+  const m: Record<string, string> = { cpf: "CPF", cnpj: "CNPJ", email: "E-mail", phone: "Telefone", random: "Chave aleatória" };
+  return m[t] || t.toUpperCase();
 }
 
 export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsappIconSrc }: ReciboPDFProps) {
   const items = [
-    { description: "Honorários Contábeis", value: Number(recibo.honorario) },
-    { description: "13º Salário", value: Number(recibo.decimoTerceiro) },
-    { description: "Taxa de Registro", value: Number(recibo.registro) },
-    { description: "Alteração Contratual", value: Number(recibo.alteracao) },
-    { description: "Material de Expediente", value: Number(recibo.materialExpediente) },
-    { description: "Outros Servicos", value: Number(recibo.outros) },
-  ].filter((item) => item.value > 0);
+    { desc: "Honorários Contábeis", val: Number(recibo.honorario) },
+    { desc: "13º Salário", val: Number(recibo.decimoTerceiro) },
+    { desc: "Taxa de Registro", val: Number(recibo.registro) },
+    { desc: "Alteração Contratual", val: Number(recibo.alteracao) },
+    { desc: "Material de Expediente", val: Number(recibo.materialExpediente) },
+    { desc: "Outros Serviços", val: Number(recibo.outros) },
+  ].filter((i) => i.val > 0);
 
-  const clienteNome = recibo.cliente?.nome || recibo.avulsoNome || "Avulso";
-  const clienteCnpj = recibo.cliente?.cnpj || recibo.avulsoCnpj || "";
-  const docInfo = formatDocument(clienteCnpj);
-  const totalFormatted = formatCurrency(Number(recibo.total));
+  const nome = recibo.cliente?.nome || recibo.avulsoNome || "Avulso";
+  const cnpj = recibo.cliente?.cnpj || recibo.avulsoCnpj || "";
+  const doc = fmtDoc(cnpj);
+  const total = fmt(Number(recibo.total));
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        {/* Thin top line */}
-        <View style={styles.topLine} />
+      <Page size="A4" style={s.page}>
+        <View style={s.accentBar} />
 
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              {logoSrc && <Image style={styles.logoImage} src={logoSrc} />}
-              <View style={styles.companyInfo}>
-                <Text style={styles.companyName}>J AMARAL CONTABIL</Text>
-                <Text style={styles.companySubtitle}>Gestão Fiscal e Contábil</Text>
+        <View style={s.content}>
+          {/* ── Header ── */}
+          <View style={s.header}>
+            <View style={s.headerLeft}>
+              {logoSrc && <Image style={s.logo} src={logoSrc} />}
+              <View>
+                <Text style={s.companyName}>J AMARAL CONTABIL</Text>
+                <Text style={s.companySub}>Gestão Fiscal e Contábil</Text>
               </View>
             </View>
-            <View style={styles.headerRight}>
-              <Text style={styles.receiptTitle}>Recibo de Prestação de Serviços</Text>
-              <Text style={styles.receiptNumber}>
-                Nº {recibo.id.slice(-6).toUpperCase()} — Emitido em {new Date(recibo.createdAt).toLocaleDateString("pt-BR")}
-              </Text>
+            <View style={s.headerRight}>
+              <Text style={s.docTitle}>Recibo</Text>
+              <Text style={s.docMeta}>Nº {recibo.id.slice(-6).toUpperCase()}</Text>
+              <Text style={s.docMeta}>Emissão: {new Date(recibo.createdAt).toLocaleDateString("pt-BR")}</Text>
             </View>
           </View>
 
-          <View style={styles.divider} />
+          <View style={s.hr} />
 
-          {/* RECEBEMOS DE box */}
-          <View style={styles.recebemosBox}>
-            <View style={styles.recebemosRow}>
-              <Text style={styles.recebemosLabel}>RECEBEMOS DE:</Text>
-              <Text style={styles.recebemosValue}>{clienteNome}</Text>
+          {/* ── Cliente ── */}
+          <View style={s.clientCard}>
+            <Text style={s.clientTitle}>Prestação de serviços para</Text>
+            <View style={s.clientRow}>
+              <Text style={s.clientLabel}>Nome / Razão Social</Text>
+              <Text style={s.clientValueBold}>{nome}</Text>
             </View>
-            <View style={styles.recebemosRow}>
-              <Text style={styles.recebemosLabel}>{docInfo.label}:</Text>
-              <Text style={styles.recebemosValueNormal}>{docInfo.formatted}</Text>
-            </View>
-            {recibo.cliente?.responsavel && (
-              <View style={styles.recebemosRow}>
-                <Text style={styles.recebemosLabel}>RESPONSÁVEL:</Text>
-                <Text style={styles.recebemosValueNormal}>{recibo.cliente.responsavel}</Text>
+            {cnpj !== "" && (
+              <View style={s.clientRow}>
+                <Text style={s.clientLabel}>{doc.label}</Text>
+                <Text style={s.clientValue}>{doc.formatted}</Text>
               </View>
             )}
-            <View style={styles.recebemosRow}>
-              <Text style={styles.recebemosLabel}>REFERENTE A:</Text>
-              <Text style={styles.recebemosValueNormal}>{formatMonthYear(recibo.mesReferencia)}</Text>
+            {recibo.cliente?.responsavel && (
+              <View style={s.clientRow}>
+                <Text style={s.clientLabel}>Responsável</Text>
+                <Text style={s.clientValue}>{recibo.cliente.responsavel}</Text>
+              </View>
+            )}
+            {recibo.cliente?.email && (
+              <View style={[s.clientRow, { marginBottom: 0 }]}>
+                <Text style={s.clientLabel}>E-mail</Text>
+                <Text style={s.clientValue}>{recibo.cliente.email}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* ── Referência + Total ── */}
+          <View style={s.refBar}>
+            <View>
+              <Text style={s.refLabel}>Competência</Text>
+              <Text style={s.refValue}>{fmtMes(recibo.mesReferencia)}</Text>
             </View>
-            <View style={[styles.recebemosRow, styles.recebemosRowLast]}>
-              <Text style={styles.recebemosLabel}>A IMPORTÂNCIA DE:</Text>
-              <Text style={styles.recebemosValueAccent}>{totalFormatted}</Text>
+            <View style={{ alignItems: "flex-end" as const }}>
+              <Text style={s.refLabel}>Valor Total</Text>
+              <Text style={s.refValue}>{total}</Text>
             </View>
           </View>
 
-          {/* Services Table */}
-          <Text style={styles.sectionLabel}>Discriminação dos Serviços</Text>
-          <View style={styles.table}>
-            <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderText, styles.descCol]}>Descrição</Text>
-              <Text style={[styles.tableHeaderText, styles.valCol]}>Valor</Text>
+          {/* ── Tabela de serviços ── */}
+          <Text style={s.tableLabel}>Serviços Prestados</Text>
+          <View style={s.table}>
+            <View style={s.tHead}>
+              <Text style={[s.tHeadText, s.descCol]}>Descrição</Text>
+              <Text style={[s.tHeadText, s.valCol]}>Valor (R$)</Text>
             </View>
-            {items.map((item, index) => (
-              <View
-                key={item.description}
-                style={[
-                  styles.tableRow,
-                  index === items.length - 1 ? styles.tableRowLast : {},
-                ]}
-              >
-                <Text style={[styles.rowText, styles.descCol]}>{item.description}</Text>
-                <Text style={[styles.rowValue, styles.valCol]}>
-                  {formatCurrency(item.value)}
-                </Text>
+            {items.map((item, i) => (
+              <View key={item.desc} style={[s.tRow, i === items.length - 1 ? s.tRowLast : {}, i % 2 === 1 ? s.tRowAlt : {}]}>
+                <Text style={[s.cellText, s.descCol]}>{item.desc}</Text>
+                <Text style={[s.cellValue, s.valCol]}>{fmt(item.val)}</Text>
               </View>
             ))}
-            <View style={styles.totalRow}>
-              <Text style={[styles.totalLabel, styles.descCol]}>TOTAL</Text>
-              <Text style={[styles.totalValue, styles.valCol]}>
-                {totalFormatted}
-              </Text>
+            <View style={s.tTotal}>
+              <Text style={s.tTotalLabel}>Total</Text>
+              <Text style={s.tTotalValue}>{total}</Text>
             </View>
           </View>
 
-          {/* PIX Payment */}
+          {/* ── Resumo textual ── */}
+          <View style={s.resumeBox}>
+            <Text style={s.resumeText}>
+              Recebemos de <Text style={s.resumeBold}>{nome}</Text> a importância de{" "}
+              <Text style={s.resumeBold}>{total}</Text>, referente à prestação de serviços contábeis do mês de{" "}
+              <Text style={s.resumeBold}>{fmtMes(recibo.mesReferencia)}</Text>, conforme discriminação acima.
+            </Text>
+          </View>
+
+          {/* ── Observações ── */}
+          {recibo.detalhamento && (
+            <View style={s.obsBox}>
+              <Text style={s.obsTitle}>Observações</Text>
+              <Text style={s.obsText}>{recibo.detalhamento}</Text>
+            </View>
+          )}
+
+          {/* ── PIX ── */}
           {pixInfo && (
-            <View style={styles.pixSection}>
-              <View style={styles.pixLeft}>
-                <Text style={styles.pixTitle}>Pagamento via PIX</Text>
+            <View style={s.pixBox}>
+              <View style={s.pixLeft}>
+                <Text style={s.pixTitle}>Pagamento via PIX</Text>
                 {qrCodeSrc ? (
                   <>
-                    <Text style={styles.pixStep}>1. Abra o app do seu banco</Text>
-                    <Text style={styles.pixStep}>2. Escaneie o QR Code ao lado</Text>
-                    <Text style={styles.pixStep}>
-                      3. Confirme o pagamento de {totalFormatted}
-                    </Text>
+                    <Text style={s.pixStep}>1. Abra o aplicativo do seu banco</Text>
+                    <Text style={s.pixStep}>2. Escaneie o QR Code ao lado</Text>
+                    <Text style={s.pixStep}>3. Confirme o pagamento de {total}</Text>
                   </>
                 ) : (
                   <>
-                    <Text style={styles.pixStep}>1. Abra o app do seu banco</Text>
-                    <Text style={styles.pixStep}>2. Escolha pagar com PIX usando a chave abaixo</Text>
-                    <Text style={styles.pixStep}>
-                      3. Digite o valor: {totalFormatted}
-                    </Text>
-                    <Text style={styles.pixStep}>4. Confirme o pagamento</Text>
+                    <Text style={s.pixStep}>1. Abra o aplicativo do seu banco</Text>
+                    <Text style={s.pixStep}>2. Selecione Pagar com PIX e copie a chave abaixo</Text>
+                    <Text style={s.pixStep}>3. Informe o valor de {total}</Text>
+                    <Text style={s.pixStep}>4. Confirme o pagamento</Text>
                   </>
                 )}
-                <View style={styles.pixKeyBox}>
-                  <Text style={styles.pixKeyLabel}>
-                    Chave PIX ({pixKeyTypeLabel(pixInfo.tipo)})
-                  </Text>
-                  <Text style={styles.pixKeyValue}>{pixInfo.chave}</Text>
-                  <Text style={styles.pixBeneficiário}>
-                    Beneficiário: {pixInfo.nomeBeneficiario}
-                  </Text>
+                <View style={s.pixKeyCard}>
+                  <Text style={s.pixKeyType}>Chave PIX ({pixTypeLabel(pixInfo.tipo)})</Text>
+                  <Text style={s.pixKeyVal}>{pixInfo.chave}</Text>
+                  <Text style={s.pixBenef}>Beneficiário: {pixInfo.nomeBeneficiario}</Text>
                 </View>
               </View>
               {qrCodeSrc && (
-                <View style={styles.pixRight}>
-                  <Image style={styles.qrImage} src={qrCodeSrc} />
-                  <Text style={styles.qrLabel}>Escaneie para pagar</Text>
-                  <Text style={styles.qrAmount}>
-                    {totalFormatted}
-                  </Text>
+                <View style={s.pixRight}>
+                  <Image style={s.qr} src={qrCodeSrc} />
+                  <Text style={s.qrCaption}>Escaneie para pagar</Text>
+                  <Text style={s.qrAmount}>{total}</Text>
                 </View>
               )}
             </View>
           )}
 
-          {/* Observations */}
-          {recibo.detalhamento && (
-            <View style={styles.detailsBox}>
-              <Text style={styles.detailsTitle}>Observações</Text>
-              <Text style={styles.detailsText}>{recibo.detalhamento}</Text>
-            </View>
-          )}
-
-          {/* Valor por extenso */}
-          <View style={styles.valorExtensoBox}>
-            <Text style={styles.valorExtensoText}>
-              Importância recebida:{" "}
-              <Text style={styles.valorExtensoBold}>{totalFormatted}</Text>
-              {" "}referente à prestação de serviços contábeis de{" "}
-              <Text style={styles.valorExtensoBold}>{formatMonthYear(recibo.mesReferencia)}</Text>.
-            </Text>
-          </View>
-
-          {/* Signature */}
-          <View style={styles.signatureArea}>
-            <Text style={styles.signatureLocal}>
-              Local e Data: Cariacica/ES, {formatDateBR(recibo.createdAt)}
-            </Text>
-            <View style={styles.signatureLine} />
-            <Text style={styles.signatureName}>Jean Claude Rezende do Amaral</Text>
-            <Text style={styles.signatureRole}>Contador - CRC-ES 008870/O-5</Text>
+          {/* ── Assinatura ── */}
+          <View style={s.sigArea}>
+            <Text style={s.sigLocal}>Cariacica/ES, {fmtData(recibo.createdAt)}</Text>
+            <View style={s.sigLine} />
+            <Text style={s.sigName}>Jean Claude Rezende do Amaral</Text>
+            <Text style={s.sigRole}>Contador — CRC-ES 008870/O-5</Text>
           </View>
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <View style={styles.footerTop}>
-            <View style={styles.footerCol}>
-              <View style={styles.footerItem}>
-                <Text style={styles.footerLabel}>Tel: </Text>
-                <Text style={styles.footerValue}>(27) 3336-3213</Text>
+        {/* ── Footer ── */}
+        <View style={s.footer} fixed>
+          <View style={s.footerRow}>
+            <View style={s.footerCol}>
+              <View style={s.footerItem}>
+                <Text style={s.footerLbl}>Tel</Text>
+                <Text style={s.footerVal}>(27) 3336-3213</Text>
               </View>
-              <View style={styles.footerItem}>
-                <Text style={styles.footerLabel}>Cel: </Text>
-                <Text style={styles.footerValue}>(27) 99932-6612</Text>
-              </View>
-            </View>
-            <View style={styles.footerCol}>
-              <View style={styles.footerItem}>
-                {whatsappIconSrc && <Image src={whatsappIconSrc} style={{ width: 10, height: 10 }} />}
-                <Text style={styles.footerValue}>(27) 99524-6812</Text>
-              </View>
-              <View style={styles.footerItem}>
-                <Text style={styles.footerLabel}>E-mail: </Text>
-                <Text style={styles.footerValue}>adm@jamaralcontabil.com.br</Text>
+              <View style={s.footerItem}>
+                <Text style={s.footerLbl}>Cel</Text>
+                <Text style={s.footerVal}>(27) 99932-6612</Text>
               </View>
             </View>
-            <View style={styles.footerCol}>
-              <View style={styles.footerItem}>
-                <Text style={styles.footerLabel}>Endereço: </Text>
-                <Text style={styles.footerValue}>Rua Adley, 108, Morada de Santa Fé</Text>
+            <View style={s.footerCol}>
+              <View style={s.footerItem}>
+                {whatsappIconSrc && <Image src={whatsappIconSrc} style={{ width: 9, height: 9 }} />}
+                <Text style={s.footerVal}>(27) 99524-6812</Text>
               </View>
-              <View style={styles.footerItem}>
-                <Text style={styles.footerValue}>Cariacica/ES - CEP 29.143-719</Text>
+              <View style={s.footerItem}>
+                <Text style={s.footerLbl}>E-mail</Text>
+                <Text style={s.footerVal}>adm@jamaralcontabil.com.br</Text>
+              </View>
+            </View>
+            <View style={s.footerCol}>
+              <View style={s.footerItem}>
+                <Text style={s.footerVal}>Rua Adley, 108 — Morada de Santa Fé</Text>
+              </View>
+              <View style={s.footerItem}>
+                <Text style={s.footerVal}>Cariacica/ES — CEP 29.143-719</Text>
               </View>
             </View>
           </View>
-          <View style={styles.footerDivider} />
-          <View style={styles.footerBottom}>
-            <Text style={styles.footerCompany}>
-              Jean Claude Rezende do Amaral - Contador - CRC-ES 008870/O-5 - Documento gerado eletronicamente
-            </Text>
+          <View style={s.footerDiv} />
+          <View style={s.footerCenter}>
+            <Text style={s.footerFine}>J AMARAL CONTABIL — Jean Claude Rezende do Amaral — CRC-ES 008870/O-5 — Documento gerado eletronicamente</Text>
           </View>
         </View>
       </Page>
