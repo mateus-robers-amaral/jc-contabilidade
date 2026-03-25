@@ -556,13 +556,14 @@ export default function RecibosPage() {
                         </span>
                       </th>
                     ))}
+                    <th className="px-6 py-3 text-[var(--text-tertiary)] text-[11px] uppercase font-semibold tracking-wider">Pagamento</th>
                     <th className="px-6 py-3 text-[var(--text-tertiary)] text-[11px] uppercase font-semibold tracking-wider text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border-secondary)]">
                   {modalRecibos.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-6 py-12 text-center text-[var(--text-tertiary)] text-[14px]">
+                      <td colSpan={5} className="px-6 py-12 text-center text-[var(--text-tertiary)] text-[14px]">
                         Nenhum recibo encontrado com esses filtros
                       </td>
                     </tr>
@@ -591,28 +592,30 @@ export default function RecibosPage() {
                         </span>
                       </td>
                       <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex flex-col gap-1">
-                          <select
-                            value={recibo.status}
-                            onChange={(e) => handleStatusChange(recibo, e.target.value)}
-                            className={`px-3 py-1 rounded-full text-[11px] font-semibold border bg-transparent cursor-pointer transition-colors ${
-                              recibo.status === "pago"
-                                ? "text-[#34C759] border-[rgba(52,199,89,0.3)] bg-[rgba(52,199,89,0.1)]"
-                                : recibo.status === "cancelado"
-                                ? "text-[#FF3B30] border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.1)]"
-                                : "text-[#FF9500] border-[rgba(255,149,0,0.3)] bg-[rgba(255,149,0,0.1)]"
-                            }`}
-                          >
-                            <option value="pendente">Pendente</option>
-                            <option value="pago">Pago</option>
-                            <option value="cancelado">Cancelado</option>
-                          </select>
-                          {recibo.status === "pago" && recibo.dataPagamento && (
-                            <span className="text-[var(--text-tertiary)] text-[10px] pl-1">
-                              {new Date(recibo.dataPagamento).toLocaleDateString("pt-BR")}
-                            </span>
-                          )}
-                        </div>
+                        <select
+                          value={recibo.status}
+                          onChange={(e) => handleStatusChange(recibo, e.target.value)}
+                          className={`px-3 py-1 rounded-full text-[11px] font-semibold border bg-transparent cursor-pointer transition-colors ${
+                            recibo.status === "pago"
+                              ? "text-[#34C759] border-[rgba(52,199,89,0.3)] bg-[rgba(52,199,89,0.1)]"
+                              : recibo.status === "cancelado"
+                              ? "text-[#FF3B30] border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.1)]"
+                              : "text-[#FF9500] border-[rgba(255,149,0,0.3)] bg-[rgba(255,149,0,0.1)]"
+                          }`}
+                        >
+                          <option value="pendente">Pendente</option>
+                          <option value="pago">Pago</option>
+                          <option value="cancelado">Cancelado</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-3">
+                        {recibo.status === "pago" && recibo.dataPagamento ? (
+                          <span className="text-[var(--text-secondary)] text-[12px]">
+                            {new Date(recibo.dataPagamento).toLocaleDateString("pt-BR")}
+                          </span>
+                        ) : (
+                          <span className="text-[var(--text-quaternary)] text-[12px]">—</span>
+                        )}
                       </td>
                       <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
