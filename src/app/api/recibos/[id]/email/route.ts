@@ -56,7 +56,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    if (!recibo.cliente?.email) {
+    const emailDest = recibo.cliente?.email || recibo.avulsoEmail;
+    if (!emailDest) {
       return NextResponse.json(
         { success: false, error: "Cliente não possui e-mail cadastrado" },
         { status: 400 }
@@ -136,12 +137,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const filename = `recibo_${safeClienteName}_${monthYear}.pdf`;
 
     // Send email via Resend API (HTTPS, não SMTP)
-    console.log(`[EMAIL] Enviando para: ${recibo.cliente!.email}`);
+    console.log(`[EMAIL] Enviando para: ${emailDest}`);
 
     const resend = new Resend(resendKey);
     const { error } = await resend.emails.send({
       from: "J AMARAL CONTABIL <adm@jamaralcontabil.com.br>",
-      to: recibo.cliente!.email!,
+      to: emailDest,
       subject: customSubject || `Recibo de Honorários - ${mesAno} | J AMARAL CONTABIL`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
@@ -221,10 +222,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       data: { emailEnviadoEm: new Date() },
     });
 
-    console.log(`[EMAIL] Enviado com sucesso para ${recibo.cliente!.email}`);
+    console.log(`[EMAIL] Enviado com sucesso para ${emailDest}`);
     return NextResponse.json({
       success: true,
-      message: `Recibo enviado para ${recibo.cliente!.email}`,
+      message: `Recibo enviado para ${emailDest}`,
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Erro desconhecido";

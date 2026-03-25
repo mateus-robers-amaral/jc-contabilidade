@@ -25,6 +25,7 @@ export interface Recibo {
   cliente?: Cliente;
   avulsoNome: string | null;
   avulsoCnpj: string | null;
+  avulsoEmail: string | null;
   mesReferencia: Date;
   honorario: number;
   decimoTerceiro: number;
@@ -66,6 +67,7 @@ export interface CreateReciboDTO {
   clienteId?: string;
   avulsoNome?: string;
   avulsoCnpj?: string;
+  avulsoEmail?: string;
   mesReferencia: string;
   honorario: number;
   decimoTerceiro?: number;

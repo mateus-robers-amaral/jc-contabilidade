@@ -47,6 +47,7 @@ interface FormData {
 interface AvulsoData {
   nome: string;
   cnpj: string;
+  email: string;
 }
 
 function getCurrentMonth() {
@@ -76,7 +77,7 @@ export default function ReciboWizard({
   const [step, setStep] = useState(0);
   const [isAvulso, setIsAvulso] = useState(false);
   const [clienteId, setClienteId] = useState("");
-  const [avulsoData, setAvulsoData] = useState<AvulsoData>({ nome: "", cnpj: "" });
+  const [avulsoData, setAvulsoData] = useState<AvulsoData>({ nome: "", cnpj: "", email: "" });
   const [formData, setFormData] = useState<FormData>(getDefaultFormData());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -104,6 +105,7 @@ export default function ReciboWizard({
       setAvulsoData({
         nome: editingRecibo.avulsoNome || "",
         cnpj: editingRecibo.avulsoCnpj || "",
+        email: editingRecibo.avulsoEmail || "",
       });
       const d = new Date(editingRecibo.mesReferencia);
       const formatted = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -119,7 +121,7 @@ export default function ReciboWizard({
     } else {
       setIsAvulso(false);
       setClienteId("");
-      setAvulsoData({ nome: "", cnpj: "" });
+      setAvulsoData({ nome: "", cnpj: "", email: "" });
       setFormData(getDefaultFormData());
     }
   }, [editingRecibo]);
@@ -150,7 +152,7 @@ export default function ReciboWizard({
     try {
       const body = {
         ...(isAvulso
-          ? { avulsoNome: avulsoData.nome.trim(), avulsoCnpj: avulsoData.cnpj.replace(/\D/g, "") }
+          ? { avulsoNome: avulsoData.nome.trim(), avulsoCnpj: avulsoData.cnpj.replace(/\D/g, ""), avulsoEmail: avulsoData.email.trim() || null }
           : { clienteId }),
         mesReferencia: formData.mesReferencia,
         honorario: formData.honorario,
@@ -279,7 +281,7 @@ export default function ReciboWizard({
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => { setIsAvulso(false); setAvulsoData({ nome: "", cnpj: "" }); }}
+                  onClick={() => { setIsAvulso(false); setAvulsoData({ nome: "", cnpj: "", email: "" }); }}
                   className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
                     !isAvulso
                       ? "border-[#00AEEF] bg-[rgba(0,174,239,0.05)]"
@@ -378,6 +380,16 @@ export default function ReciboWizard({
                     onChange={(e) => setAvulsoData((prev) => ({ ...prev, cnpj: e.target.value }))}
                     placeholder="000.000.000-00 ou 00.000.000/0000-00"
                     className="w-full h-[48px] bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 text-[var(--text-primary)] text-[14px] font-mono placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[#00AEEF] focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] transition-all"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[var(--text-primary)] text-[14px] font-medium">E-mail</label>
+                  <input
+                    type="email"
+                    value={avulsoData.email}
+                    onChange={(e) => setAvulsoData((prev) => ({ ...prev, email: e.target.value }))}
+                    placeholder="email@exemplo.com"
+                    className="w-full h-[48px] bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 text-[var(--text-primary)] text-[14px] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[#00AEEF] focus:ring-4 focus:ring-[rgba(0,174,239,0.15)] transition-all"
                   />
                 </div>
                 {avulsoData.nome && avulsoData.cnpj && (

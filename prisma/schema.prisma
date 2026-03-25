@@ -38,6 +38,7 @@ model Recibo {
   cliente            Cliente? @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   avulsoNome         String?
   avulsoCnpj         String?
+  avulsoEmail        String?
   mesReferencia      DateTime
   honorario          Decimal  @db.Decimal(10, 2)
   decimoTerceiro     Decimal  @default(0) @db.Decimal(10, 2)
