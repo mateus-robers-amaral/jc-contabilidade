@@ -21,10 +21,10 @@ const s = StyleSheet.create({
   accentBar: { height: 4, backgroundColor: ACCENT },
 
   /* ── Content ── */
-  content: { paddingHorizontal: 44, paddingTop: 24, paddingBottom: 100 },
+  content: { paddingHorizontal: 44, paddingTop: 20, paddingBottom: 80 },
 
   /* ── Header ── */
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
   logo: { width: 42, height: 42, objectFit: "contain" },
   companyName: { fontSize: 14, fontFamily: "Helvetica-Bold", color: ACCENT, letterSpacing: 0.3 },
@@ -34,24 +34,24 @@ const s = StyleSheet.create({
   docMeta: { fontSize: 8, color: GRAY, marginTop: 3, textAlign: "right" },
 
   /* ── Divider ── */
-  hr: { height: 1, backgroundColor: BORDER, marginVertical: 14 },
+  hr: { height: 1, backgroundColor: BORDER, marginVertical: 10 },
 
   /* ── Client card ── */
-  clientCard: { backgroundColor: LIGHT, borderRadius: 4, padding: 14, marginBottom: 16 },
-  clientTitle: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: GRAY, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 },
+  clientCard: { backgroundColor: LIGHT, borderRadius: 4, padding: 12, marginBottom: 12 },
+  clientTitle: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: GRAY, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 },
   clientRow: { flexDirection: "row", marginBottom: 4 },
   clientLabel: { fontSize: 8.5, color: GRAY, width: 95 },
   clientValue: { fontSize: 9.5, color: DARK, flex: 1 },
   clientValueBold: { fontSize: 10, fontFamily: "Helvetica-Bold", color: DARK, flex: 1 },
 
   /* ── Reference bar ── */
-  refBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: ACCENT, borderRadius: 4, padding: 12, marginBottom: 16 },
+  refBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: ACCENT, borderRadius: 4, padding: 10, marginBottom: 12 },
   refLabel: { fontSize: 8, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: 0.8 },
   refValue: { fontSize: 11, fontFamily: "Helvetica-Bold", color: "#fff", marginTop: 1 },
 
   /* ── Table ── */
   tableLabel: { fontSize: 8, fontFamily: "Helvetica-Bold", color: DARK, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 },
-  table: { borderWidth: 1, borderColor: BORDER, borderRadius: 4, overflow: "hidden", marginBottom: 16 },
+  table: { borderWidth: 1, borderColor: BORDER, borderRadius: 4, overflow: "hidden", marginBottom: 12 },
   tHead: { flexDirection: "row", backgroundColor: LIGHT, paddingVertical: 7, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: BORDER },
   tHeadText: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: GRAY, textTransform: "uppercase", letterSpacing: 0.6 },
   tRow: { flexDirection: "row", paddingVertical: 7, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: BORDER },
@@ -65,19 +65,14 @@ const s = StyleSheet.create({
   tTotalLabel: { flex: 3, fontSize: 9.5, fontFamily: "Helvetica-Bold", color: "#fff", textTransform: "uppercase", letterSpacing: 0.5 },
   tTotalValue: { flex: 1, fontSize: 11, fontFamily: "Helvetica-Bold", color: "#fff", textAlign: "right" },
 
-  /* ── Resumo textual ── */
-  resumeBox: { borderLeftWidth: 3, borderLeftColor: BLUE, backgroundColor: LIGHT, borderRadius: 2, paddingVertical: 10, paddingHorizontal: 14, marginBottom: 16 },
-  resumeText: { fontSize: 9, color: DARK, lineHeight: 1.6 },
-  resumeBold: { fontFamily: "Helvetica-Bold" },
-
   /* ── Observações ── */
-  obsBox: { borderWidth: 1, borderColor: BORDER, borderRadius: 4, padding: 12, marginBottom: 16 },
+  obsBox: { borderWidth: 1, borderColor: BORDER, borderRadius: 4, padding: 10, marginBottom: 12 },
   obsTitle: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: GRAY, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5 },
   obsText: { fontSize: 9, color: DARK, lineHeight: 1.5 },
 
   /* ── PIX ── */
-  pixBox: { flexDirection: "row", borderWidth: 1, borderColor: BORDER, borderRadius: 4, overflow: "hidden", marginBottom: 16 },
-  pixLeft: { flex: 1, padding: 14 },
+  pixBox: { flexDirection: "row", borderWidth: 1, borderColor: BORDER, borderRadius: 4, overflow: "hidden", marginBottom: 12 },
+  pixLeft: { flex: 1, padding: 12 },
   pixTitle: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: DARK, marginBottom: 8 },
   pixStep: { fontSize: 8, color: GRAY, marginBottom: 2.5, lineHeight: 1.3 },
   pixKeyCard: { marginTop: 8, backgroundColor: LIGHT, borderRadius: 3, padding: 10 },
@@ -90,8 +85,8 @@ const s = StyleSheet.create({
   qrAmount: { fontSize: 10, fontFamily: "Helvetica-Bold", color: ACCENT, marginTop: 2, textAlign: "center" },
 
   /* ── Assinatura ── */
-  sigArea: { alignItems: "center", marginTop: 24 },
-  sigLocal: { fontSize: 8.5, color: GRAY, marginBottom: 32 },
+  sigArea: { alignItems: "center", marginTop: 16 },
+  sigLocal: { fontSize: 8.5, color: GRAY, marginBottom: 24 },
   sigLine: { width: 240, borderTopWidth: 1, borderTopColor: DARK, marginBottom: 6 },
   sigName: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: DARK, textAlign: "center" },
   sigRole: { fontSize: 7.5, color: GRAY, marginTop: 2, textAlign: "center" },
@@ -227,7 +222,7 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsap
           {/* ── Referência + Total ── */}
           <View style={s.refBar}>
             <View>
-              <Text style={s.refLabel}>Competência</Text>
+              <Text style={s.refLabel}>Mês de Referência</Text>
               <Text style={s.refValue}>{fmtMes(recibo.mesReferencia)}</Text>
             </View>
             <View style={{ alignItems: "flex-end" as const }}>
@@ -253,15 +248,6 @@ export default function ReciboPDF({ recibo, logoSrc, qrCodeSrc, pixInfo, whatsap
               <Text style={s.tTotalLabel}>Total</Text>
               <Text style={s.tTotalValue}>{total}</Text>
             </View>
-          </View>
-
-          {/* ── Resumo textual ── */}
-          <View style={s.resumeBox}>
-            <Text style={s.resumeText}>
-              Recebemos de <Text style={s.resumeBold}>{nome}</Text> a importância de{" "}
-              <Text style={s.resumeBold}>{total}</Text>, referente à prestação de serviços contábeis do mês de{" "}
-              <Text style={s.resumeBold}>{fmtMes(recibo.mesReferencia)}</Text>, conforme discriminação acima.
-            </Text>
           </View>
 
           {/* ── Observações ── */}
