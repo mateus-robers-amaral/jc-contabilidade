@@ -162,6 +162,11 @@ export default function RecibosPage() {
   const [openMonthGroup, setOpenMonthGroup] = useState<MonthGroup | null>(null);
   const [modalSearch, setModalSearch] = useState("");
   const [modalStatusFilter, setModalStatusFilter] = useState<string>("todos");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
 
   // Group recibos by month
   const monthGroups: MonthGroup[] = useMemo(() => {
@@ -184,6 +189,33 @@ export default function RecibosPage() {
         cancelados: items.filter((r) => r.status === "cancelado").length,
       }));
   }, [recibos]);
+
+  // Calendar: recibos paid per day
+  const calendarData = useMemo(() => {
+    const map = new Map<number, Recibo[]>();
+    const source = selectedMonthKey ? monthGroups.find((g) => g.key === selectedMonthKey)?.recibos || recibos : recibos;
+    source.forEach((r) => {
+      if (r.status === "pago" && r.dataPagamento) {
+        const d = new Date(r.dataPagamento);
+        if (d.getFullYear() === calendarMonth.year && d.getMonth() === calendarMonth.month) {
+          const day = d.getDate();
+          if (!map.has(day)) map.set(day, []);
+          map.get(day)!.push(r);
+        }
+      }
+    });
+    return map;
+  }, [recibos, monthGroups, selectedMonthKey, calendarMonth]);
+
+  const calendarTotalMes = useMemo(() => {
+    let total = 0;
+    let count = 0;
+    calendarData.forEach((items) => {
+      count += items.length;
+      items.forEach((r) => { total += Number(r.total); });
+    });
+    return { total, count };
+  }, [calendarData]);
 
   // Sync open modal with updated recibos data
   useEffect(() => {
@@ -346,7 +378,8 @@ export default function RecibosPage() {
   };
 
   const openEmailModal = (recibo: Recibo) => {
-    if (!recibo.cliente?.email) { alert("Cliente não possui e-mail cadastrado"); return; }
+    const email = recibo.cliente?.email || recibo.avulsoEmail;
+    if (!email) { alert("Cliente não possui e-mail cadastrado"); return; }
     const mesRef = new Date(recibo.mesReferencia);
     const mesAno = `${MESES[mesRef.getUTCMonth()]}/${mesRef.getUTCFullYear()}`;
     const valor = formatCurrency(Number(recibo.total));
@@ -397,11 +430,11 @@ export default function RecibosPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <button onClick={() => openKpiModal("todos")}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <button onClick={() => setCalendarOpen(true)}
           className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] hover:border-[#00AEEF] hover:shadow-md transition-all cursor-pointer">
-          <span className="material-symbols-outlined text-[#00AEEF] text-[28px] mb-2">receipt_long</span>
-          <p className="text-[var(--text-tertiary)] text-[11px] font-semibold uppercase tracking-wider">Recibos</p>
+          <span className="material-symbols-outlined text-[#00AEEF] text-[28px] mb-2">calendar_month</span>
+          <p className="text-[var(--text-tertiary)] text-[11px] font-semibold uppercase tracking-wider">Calendário</p>
           <p className="text-[var(--text-primary)] text-[28px] font-bold">{stats.totalRecibos}</p>
           <p className="text-[var(--text-tertiary)] text-[13px] mt-1">{formatCurrency(stats.totalGeral)}</p>
         </button>
@@ -425,12 +458,6 @@ export default function RecibosPage() {
           <p className="text-[#FF9500] text-[11px] font-semibold uppercase tracking-wider">Avulsos</p>
           <p className="text-[var(--text-primary)] text-[28px] font-bold">{stats.avulsosCount}</p>
           <p className="text-[var(--text-tertiary)] text-[13px] mt-1">{formatCurrency(stats.avulsosTotal)}</p>
-        </button>
-        <button onClick={() => openKpiModal("cancelado")}
-          className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[rgba(255,59,48,0.05)] border border-[rgba(255,59,48,0.15)] hover:border-[#FF3B30] hover:shadow-md transition-all cursor-pointer">
-          <span className="material-symbols-outlined text-[#FF3B30] text-[28px] mb-2">cancel</span>
-          <p className="text-[#FF3B30] text-[11px] font-semibold uppercase tracking-wider">Cancelados</p>
-          <p className="text-[var(--text-primary)] text-[28px] font-bold">{recibos.filter((r) => r.status === "cancelado").length}</p>
         </button>
       </div>
 
@@ -508,6 +535,101 @@ export default function RecibosPage() {
           })}
         </div>
       )}
+
+      {/* Calendar Modal */}
+      {calendarOpen && (() => {
+        const y = calendarMonth.year;
+        const m = calendarMonth.month;
+        const firstDay = new Date(y, m, 1).getDay(); // 0=Sun
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        const weeks: (number | null)[][] = [];
+        let week: (number | null)[] = Array(firstDay).fill(null);
+        for (let d = 1; d <= daysInMonth; d++) {
+          week.push(d);
+          if (week.length === 7) { weeks.push(week); week = []; }
+        }
+        if (week.length > 0) { while (week.length < 7) week.push(null); weeks.push(week); }
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setCalendarOpen(false)} />
+            <div className="relative w-full max-w-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-2xl shadow-2xl overflow-hidden z-10">
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-primary)] bg-[var(--bg-secondary)]">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-[#00AEEF] text-[24px]">calendar_month</span>
+                  <div>
+                    <h2 className="text-[var(--text-primary)] text-[16px] font-bold">Calendário de Pagamentos</h2>
+                    <p className="text-[var(--text-tertiary)] text-[12px]">{calendarTotalMes.count} pagamento{calendarTotalMes.count !== 1 ? "s" : ""} — {formatCurrency(calendarTotalMes.total)}</p>
+                  </div>
+                </div>
+                <button onClick={() => setCalendarOpen(false)}
+                  className="size-9 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+
+              {/* Month navigation */}
+              <div className="flex items-center justify-between px-6 py-3">
+                <button onClick={() => setCalendarMonth((p) => {
+                  const d = new Date(p.year, p.month - 1, 1);
+                  return { year: d.getFullYear(), month: d.getMonth() };
+                })} className="size-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+                </button>
+                <p className="text-[var(--text-primary)] text-[15px] font-bold">{MESES[m]} {y}</p>
+                <button onClick={() => setCalendarMonth((p) => {
+                  const d = new Date(p.year, p.month + 1, 1);
+                  return { year: d.getFullYear(), month: d.getMonth() };
+                })} className="size-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                </button>
+              </div>
+
+              {/* Calendar grid */}
+              <div className="px-6 pb-6">
+                {/* Day headers */}
+                <div className="grid grid-cols-7 gap-1 mb-1">
+                  {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d) => (
+                    <div key={d} className="text-center text-[var(--text-tertiary)] text-[11px] font-semibold uppercase py-2">{d}</div>
+                  ))}
+                </div>
+                {/* Weeks */}
+                {weeks.map((wk, wi) => (
+                  <div key={wi} className="grid grid-cols-7 gap-1">
+                    {wk.map((day, di) => {
+                      const dayRecibos = day ? calendarData.get(day) : undefined;
+                      const hasPayments = dayRecibos && dayRecibos.length > 0;
+                      const dayTotal = dayRecibos?.reduce((s, r) => s + Number(r.total), 0) || 0;
+                      const isToday = day === new Date().getDate() && m === new Date().getMonth() && y === new Date().getFullYear();
+                      return (
+                        <div key={di} className={`relative min-h-[64px] rounded-lg p-1.5 text-[12px] transition-colors ${
+                          !day ? "" : isToday ? "bg-[rgba(0,174,239,0.08)] border border-[#00AEEF]" : "bg-[var(--bg-tertiary)] border border-transparent hover:border-[var(--border-primary)]"
+                        }`}>
+                          {day && (
+                            <>
+                              <span className={`text-[12px] font-semibold ${isToday ? "text-[#00AEEF]" : "text-[var(--text-primary)]"}`}>{day}</span>
+                              {hasPayments && (
+                                <div className="mt-0.5">
+                                  <div className="flex items-center gap-1">
+                                    <span className="size-1.5 rounded-full bg-[#34C759]" />
+                                    <span className="text-[9px] font-semibold text-[#34C759]">{dayRecibos!.length}</span>
+                                  </div>
+                                  <p className="text-[9px] font-bold text-[var(--text-primary)] mt-0.5 truncate">{formatCurrency(dayTotal)}</p>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Month Detail Modal */}
       {openMonthGroup && (
@@ -670,7 +792,7 @@ export default function RecibosPage() {
                           ) : (
                             <button onClick={() => openEmailModal(recibo)} disabled={!!sendingEmail}
                               className="size-8 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[#5856D6] hover:bg-[rgba(88,86,214,0.1)] transition-all disabled:opacity-50"
-                              title={recibo.cliente?.email ? `Enviar para ${recibo.cliente.email}` : "Cliente sem e-mail"}>
+                              title={(recibo.cliente?.email || recibo.avulsoEmail) ? `Enviar para ${recibo.cliente?.email || recibo.avulsoEmail}` : "Cliente sem e-mail"}>
                               <span className="material-symbols-outlined text-[18px]">mail</span>
                             </button>
                           )}
