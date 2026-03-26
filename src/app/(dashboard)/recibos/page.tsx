@@ -167,6 +167,7 @@ export default function RecibosPage() {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
+  const [calendarDayRecibos, setCalendarDayRecibos] = useState<{ day: number; recibos: Recibo[] } | null>(null);
 
   // Group recibos by month
   const monthGroups: MonthGroup[] = useMemo(() => {
@@ -603,9 +604,13 @@ export default function RecibosPage() {
                       const dayTotal = dayRecibos?.reduce((s, r) => s + Number(r.total), 0) || 0;
                       const isToday = day === new Date().getDate() && m === new Date().getMonth() && y === new Date().getFullYear();
                       return (
-                        <div key={di} className={`relative min-h-[64px] rounded-lg p-1.5 text-[12px] transition-colors ${
-                          !day ? "" : isToday ? "bg-[rgba(0,174,239,0.08)] border border-[#00AEEF]" : "bg-[var(--bg-tertiary)] border border-transparent hover:border-[var(--border-primary)]"
-                        }`}>
+                        <div
+                          key={di}
+                          onClick={() => hasPayments && setCalendarDayRecibos({ day: day!, recibos: dayRecibos! })}
+                          className={`relative min-h-[64px] rounded-lg p-1.5 text-[12px] transition-colors ${
+                            !day ? "" : hasPayments ? "cursor-pointer hover:ring-2 hover:ring-[#34C759]/30 " : ""
+                          }${!day ? "" : isToday ? "bg-[rgba(0,174,239,0.08)] border border-[#00AEEF]" : "bg-[var(--bg-tertiary)] border border-transparent hover:border-[var(--border-primary)]"}`}
+                        >
                           {day && (
                             <>
                               <span className={`text-[12px] font-semibold ${isToday ? "text-[#00AEEF]" : "text-[var(--text-primary)]"}`}>{day}</span>
@@ -630,6 +635,54 @@ export default function RecibosPage() {
           </div>
         );
       })()}
+
+      {/* Calendar Day Detail Modal */}
+      {calendarDayRecibos && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setCalendarDayRecibos(null)} />
+          <div className="relative w-full max-w-lg bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--border-primary)] bg-[var(--bg-secondary)] shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center size-9 rounded-lg bg-[#34C759]">
+                  <span className="text-white text-[13px] font-bold">{calendarDayRecibos.day}</span>
+                </div>
+                <div>
+                  <h3 className="text-[var(--text-primary)] text-[15px] font-bold">
+                    {calendarDayRecibos.day} de {MESES[calendarMonth.month]} {calendarMonth.year}
+                  </h3>
+                  <p className="text-[var(--text-tertiary)] text-[11px]">
+                    {calendarDayRecibos.recibos.length} pagamento{calendarDayRecibos.recibos.length !== 1 ? "s" : ""} — {formatCurrency(calendarDayRecibos.recibos.reduce((s, r) => s + Number(r.total), 0))}
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => setCalendarDayRecibos(null)}
+                className="size-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto divide-y divide-[var(--border-secondary)]">
+              {calendarDayRecibos.recibos.map((recibo) => (
+                <div key={recibo.id} onClick={() => { setCalendarDayRecibos(null); setCalendarOpen(false); setPreviewRecibo(recibo); }}
+                  className="flex items-center gap-3 px-5 py-3 hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer">
+                  <div className={`flex items-center justify-center size-10 rounded-xl text-white font-bold text-[11px] shrink-0 ${isAvulso(recibo) ? "bg-gradient-to-br from-[#FF9500] to-[#FF6B00]" : "bg-gradient-to-br from-[#00AEEF] to-[#2E3192]"}`}>
+                    {getInitials(getReciboNome(recibo))}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[var(--text-primary)] text-[13px] font-medium truncate">{getReciboNome(recibo)}</p>
+                      {isAvulso(recibo) && <span className="px-1.5 py-0.5 rounded bg-[rgba(255,149,0,0.15)] text-[#FF9500] text-[8px] font-bold uppercase shrink-0">Avulso</span>}
+                    </div>
+                    <p className="text-[var(--text-tertiary)] text-[11px]">
+                      {recibo.dataPagamento && new Date(recibo.dataPagamento).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                  <p className="text-[#34C759] text-[14px] font-bold shrink-0">{formatCurrency(Number(recibo.total))}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Month Detail Modal */}
       {openMonthGroup && (
