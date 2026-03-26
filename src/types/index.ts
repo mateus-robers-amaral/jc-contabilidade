@@ -87,6 +87,7 @@ export interface UpdateReciboDTO {
   outros?: number;
   detalhamento?: string;
   status?: "pendente" | "pago" | "cancelado";
+  dataPagamento?: string | null;
 }
 
 export interface LoginDTO {

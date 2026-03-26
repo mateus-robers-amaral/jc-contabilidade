@@ -378,6 +378,21 @@ export default function RecibosPage() {
     }
   };
 
+  const handleEditPaymentDate = async (recibo: Recibo, newDate: string) => {
+    const isoDate = new Date(newDate + "T12:00:00").toISOString();
+    setRecibos((prev) => prev.map((r) => r.id === recibo.id ? { ...r, dataPagamento: isoDate as unknown as Date } : r));
+    try {
+      const res = await fetch(`/api/recibos/${recibo.id}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataPagamento: isoDate }),
+      });
+      const data: ApiResponse<Recibo> = await res.json();
+      if (!data.success) setRecibos((prev) => prev.map((r) => r.id === recibo.id ? recibo : r));
+    } catch {
+      setRecibos((prev) => prev.map((r) => r.id === recibo.id ? recibo : r));
+    }
+  };
+
   const openEmailModal = (recibo: Recibo) => {
     const email = recibo.cliente?.email || recibo.avulsoEmail;
     if (!email) { alert("Cliente não possui e-mail cadastrado"); return; }
@@ -541,7 +556,7 @@ export default function RecibosPage() {
       {calendarOpen && (() => {
         const y = calendarMonth.year;
         const m = calendarMonth.month;
-        const firstDay = new Date(y, m, 1).getDay(); // 0=Sun
+        const firstDay = new Date(y, m, 1).getDay();
         const daysInMonth = new Date(y, m + 1, 0).getDate();
         const weeks: (number | null)[][] = [];
         let week: (number | null)[] = Array(firstDay).fill(null);
@@ -552,52 +567,54 @@ export default function RecibosPage() {
         if (week.length > 0) { while (week.length < 7) week.push(null); weeks.push(week); }
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setCalendarOpen(false)} />
-            <div className="relative w-full max-w-2xl bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-2xl shadow-2xl overflow-hidden z-10">
+            <div className="relative w-full max-w-4xl bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-2xl shadow-2xl overflow-hidden z-10">
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-primary)] bg-[var(--bg-secondary)]">
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[#00AEEF] text-[24px]">calendar_month</span>
+              <div className="flex items-center justify-between px-8 py-5 bg-gradient-to-r from-[#2E3192] to-[#00AEEF]">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-center size-12 rounded-xl bg-white/15">
+                    <span className="material-symbols-outlined text-white text-[26px]">calendar_month</span>
+                  </div>
                   <div>
-                    <h2 className="text-[var(--text-primary)] text-[16px] font-bold">Calendário de Pagamentos</h2>
-                    <p className="text-[var(--text-tertiary)] text-[12px]">{calendarTotalMes.count} pagamento{calendarTotalMes.count !== 1 ? "s" : ""} — {formatCurrency(calendarTotalMes.total)}</p>
+                    <h2 className="text-white text-[18px] font-bold">Calendário de Pagamentos</h2>
+                    <p className="text-white/70 text-[13px]">{calendarTotalMes.count} pagamento{calendarTotalMes.count !== 1 ? "s" : ""} — {formatCurrency(calendarTotalMes.total)}</p>
                   </div>
                 </div>
                 <button onClick={() => setCalendarOpen(false)}
-                  className="size-9 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
-                  <span className="material-symbols-outlined text-[20px]">close</span>
+                  className="size-10 rounded-xl flex items-center justify-center hover:bg-white/15 text-white/70 hover:text-white transition-colors">
+                  <span className="material-symbols-outlined text-[22px]">close</span>
                 </button>
               </div>
 
               {/* Month navigation */}
-              <div className="flex items-center justify-between px-6 py-3">
+              <div className="flex items-center justify-between px-8 py-4 border-b border-[var(--border-primary)]">
                 <button onClick={() => setCalendarMonth((p) => {
                   const d = new Date(p.year, p.month - 1, 1);
                   return { year: d.getFullYear(), month: d.getMonth() };
-                })} className="size-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] transition-colors">
-                  <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+                })} className="size-10 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+                  <span className="material-symbols-outlined text-[22px]">chevron_left</span>
                 </button>
-                <p className="text-[var(--text-primary)] text-[15px] font-bold">{MESES[m]} {y}</p>
+                <p className="text-[var(--text-primary)] text-[18px] font-bold">{MESES[m]} {y}</p>
                 <button onClick={() => setCalendarMonth((p) => {
                   const d = new Date(p.year, p.month + 1, 1);
                   return { year: d.getFullYear(), month: d.getMonth() };
-                })} className="size-8 rounded-lg flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] transition-colors">
-                  <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                })} className="size-10 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+                  <span className="material-symbols-outlined text-[22px]">chevron_right</span>
                 </button>
               </div>
 
               {/* Calendar grid */}
-              <div className="px-6 pb-6">
+              <div className="px-8 py-5">
                 {/* Day headers */}
-                <div className="grid grid-cols-7 gap-1 mb-1">
+                <div className="grid grid-cols-7 gap-2 mb-2">
                   {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d) => (
-                    <div key={d} className="text-center text-[var(--text-tertiary)] text-[11px] font-semibold uppercase py-2">{d}</div>
+                    <div key={d} className="text-center text-[var(--text-tertiary)] text-[12px] font-semibold uppercase tracking-wider py-2">{d}</div>
                   ))}
                 </div>
                 {/* Weeks */}
                 {weeks.map((wk, wi) => (
-                  <div key={wi} className="grid grid-cols-7 gap-1">
+                  <div key={wi} className="grid grid-cols-7 gap-2 mb-2">
                     {wk.map((day, di) => {
                       const dayRecibos = day ? calendarData.get(day) : undefined;
                       const hasPayments = dayRecibos && dayRecibos.length > 0;
@@ -607,20 +624,23 @@ export default function RecibosPage() {
                         <div
                           key={di}
                           onClick={() => hasPayments && setCalendarDayRecibos({ day: day!, recibos: dayRecibos! })}
-                          className={`relative min-h-[64px] rounded-lg p-1.5 text-[12px] transition-colors ${
-                            !day ? "" : hasPayments ? "cursor-pointer hover:ring-2 hover:ring-[#34C759]/30 " : ""
-                          }${!day ? "" : isToday ? "bg-[rgba(0,174,239,0.08)] border border-[#00AEEF]" : "bg-[var(--bg-tertiary)] border border-transparent hover:border-[var(--border-primary)]"}`}
+                          className={`relative min-h-[80px] rounded-xl p-2.5 transition-all ${
+                            !day
+                              ? "bg-transparent"
+                              : hasPayments
+                                ? "cursor-pointer bg-[rgba(52,199,89,0.06)] border border-[rgba(52,199,89,0.2)] hover:border-[#34C759] hover:shadow-md"
+                                : isToday
+                                  ? "bg-[rgba(0,174,239,0.06)] border-2 border-[#00AEEF]"
+                                  : "bg-[var(--bg-tertiary)] border border-[var(--border-primary)]"
+                          }`}
                         >
                           {day && (
                             <>
-                              <span className={`text-[12px] font-semibold ${isToday ? "text-[#00AEEF]" : "text-[var(--text-primary)]"}`}>{day}</span>
+                              <span className={`text-[13px] font-bold ${isToday ? "text-[#00AEEF]" : hasPayments ? "text-[#34C759]" : "text-[var(--text-primary)]"}`}>{day}</span>
                               {hasPayments && (
-                                <div className="mt-0.5">
-                                  <div className="flex items-center gap-1">
-                                    <span className="size-1.5 rounded-full bg-[#34C759]" />
-                                    <span className="text-[9px] font-semibold text-[#34C759]">{dayRecibos!.length}</span>
-                                  </div>
-                                  <p className="text-[9px] font-bold text-[var(--text-primary)] mt-0.5 truncate">{formatCurrency(dayTotal)}</p>
+                                <div className="mt-1">
+                                  <p className="text-[10px] font-bold text-[var(--text-primary)]">{formatCurrency(dayTotal)}</p>
+                                  <p className="text-[9px] text-[#34C759] font-semibold mt-0.5">{dayRecibos!.length} pago{dayRecibos!.length !== 1 ? "s" : ""}</p>
                                 </div>
                               )}
                             </>
@@ -814,11 +834,14 @@ export default function RecibosPage() {
                           <option value="cancelado">Cancelado</option>
                         </select>
                       </td>
-                      <td className="px-6 py-3">
+                      <td className="px-6 py-3" onClick={(e) => e.stopPropagation()}>
                         {recibo.status === "pago" && recibo.dataPagamento ? (
-                          <span className="text-[var(--text-secondary)] text-[12px]">
-                            {new Date(recibo.dataPagamento).toLocaleDateString("pt-BR")}
-                          </span>
+                          <input
+                            type="date"
+                            value={new Date(recibo.dataPagamento).toISOString().split("T")[0]}
+                            onChange={(e) => e.target.value && handleEditPaymentDate(recibo, e.target.value)}
+                            className="bg-transparent text-[var(--text-secondary)] text-[12px] border-none outline-none cursor-pointer hover:text-[#00AEEF] transition-colors"
+                          />
                         ) : (
                           <span className="text-[var(--text-quaternary)] text-[12px]">—</span>
                         )}

@@ -86,12 +86,17 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (body.alteracao !== undefined) updateData.alteracao = Number(body.alteracao);
     if (body.outros !== undefined) updateData.outros = Number(body.outros);
     if (body.detalhamento !== undefined) updateData.detalhamento = body.detalhamento || null;
+    if (body.dataPagamento !== undefined) {
+      updateData.dataPagamento = body.dataPagamento ? new Date(body.dataPagamento) : null;
+    }
     if (body.status) {
       updateData.status = body.status;
-      if (body.status === "pago") {
-        updateData.dataPagamento = new Date();
-      } else {
-        updateData.dataPagamento = null;
+      if (body.dataPagamento === undefined) {
+        if (body.status === "pago") {
+          updateData.dataPagamento = new Date();
+        } else {
+          updateData.dataPagamento = null;
+        }
       }
     }
 
