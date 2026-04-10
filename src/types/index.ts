@@ -73,6 +73,7 @@ export interface CreateReciboDTO {
   decimoTerceiro?: number;
   registro?: number;
   alteracao?: number;
+  materialExpediente?: number;
   outros?: number;
   detalhamento?: string;
 }
@@ -84,6 +85,7 @@ export interface UpdateReciboDTO {
   decimoTerceiro?: number;
   registro?: number;
   alteracao?: number;
+  materialExpediente?: number;
   outros?: number;
   detalhamento?: string;
   status?: "pendente" | "pago" | "cancelado";

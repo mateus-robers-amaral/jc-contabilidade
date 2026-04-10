@@ -40,6 +40,7 @@ interface FormData {
   decimoTerceiro: number;
   registro: number;
   alteracao: number;
+  materialExpediente: number;
   outros: number;
   detalhamento: string;
 }
@@ -62,6 +63,7 @@ function getDefaultFormData(): FormData {
     decimoTerceiro: 0,
     registro: 0,
     alteracao: 0,
+    materialExpediente: MATERIAL_EXPEDIENTE,
     outros: 0,
     detalhamento: "",
   };
@@ -85,12 +87,14 @@ export default function ReciboWizard({
   const isEditing = !!editingRecibo;
   const selectedCliente = clientes.find((c) => c.id === clienteId);
 
+  const materialValue = isAvulso ? formData.materialExpediente : MATERIAL_EXPEDIENTE;
+
   const total =
     formData.honorario +
     formData.decimoTerceiro +
     formData.registro +
     formData.alteracao +
-    MATERIAL_EXPEDIENTE +
+    materialValue +
     formData.outros;
 
   const resetState = useCallback(() => {
@@ -115,6 +119,7 @@ export default function ReciboWizard({
         decimoTerceiro: Number(editingRecibo.decimoTerceiro) || 0,
         registro: Number(editingRecibo.registro) || 0,
         alteracao: Number(editingRecibo.alteracao) || 0,
+        materialExpediente: Number(editingRecibo.materialExpediente) || MATERIAL_EXPEDIENTE,
         outros: Number(editingRecibo.outros) || 0,
         detalhamento: editingRecibo.detalhamento || "",
       });
@@ -161,6 +166,7 @@ export default function ReciboWizard({
         alteracao: formData.alteracao,
         outros: formData.outros,
         detalhamento: formData.detalhamento || null,
+        ...(isAvulso && { materialExpediente: formData.materialExpediente }),
         ...(isEditing && { status: editingRecibo!.status }),
       };
 
@@ -199,7 +205,7 @@ export default function ReciboWizard({
     { label: "13º Salário", value: formData.decimoTerceiro },
     { label: "Taxa de Registro", value: formData.registro },
     { label: "Alteração Contratual", value: formData.alteracao },
-    { label: "Material de Expediente", value: MATERIAL_EXPEDIENTE },
+    { label: "Material de Expediente", value: materialValue },
     { label: "Outros Serviços", value: formData.outros },
   ];
 
@@ -497,9 +503,9 @@ export default function ReciboWizard({
               />
               <CurrencyInput
                 label="Material de Expediente"
-                value={MATERIAL_EXPEDIENTE}
-                onChange={() => {}}
-                disabled
+                value={materialValue}
+                onChange={(val) => setFormData((prev) => ({ ...prev, materialExpediente: val }))}
+                disabled={!isAvulso}
               />
               <CurrencyInput
                 label="Outros Serviços"

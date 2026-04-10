@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
       decimoTerceiro = 0,
       registro = 0,
       alteracao = 0,
+      materialExpediente,
       outros = 0,
       detalhamento,
     } = body;
@@ -150,13 +151,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const matExpValue = materialExpediente !== undefined ? Number(materialExpediente) : MATERIAL_EXPEDIENTE;
+
     // Calculate total
     const total = calculateTotal({
       honorario: Number(honorario),
       decimoTerceiro: Number(decimoTerceiro),
       registro: Number(registro),
       alteracao: Number(alteracao),
-      materialExpediente: MATERIAL_EXPEDIENTE,
+      materialExpediente: matExpValue,
       outros: Number(outros),
     });
 
@@ -188,7 +191,7 @@ export async function POST(request: NextRequest) {
         decimoTerceiro: Number(decimoTerceiro),
         registro: Number(registro),
         alteracao: Number(alteracao),
-        materialExpediente: MATERIAL_EXPEDIENTE,
+        materialExpediente: matExpValue,
         outros: Number(outros),
         detalhamento: detalhamento || null,
         total,

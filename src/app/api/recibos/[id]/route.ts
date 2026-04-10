@@ -85,6 +85,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (body.registro !== undefined) updateData.registro = Number(body.registro);
     if (body.alteracao !== undefined) updateData.alteracao = Number(body.alteracao);
     if (body.outros !== undefined) updateData.outros = Number(body.outros);
+    if (body.materialExpediente !== undefined) updateData.materialExpediente = Number(body.materialExpediente);
     if (body.detalhamento !== undefined) updateData.detalhamento = body.detalhamento || null;
     if (body.dataPagamento !== undefined) {
       updateData.dataPagamento = body.dataPagamento ? new Date(body.dataPagamento) : null;
@@ -105,6 +106,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const decimoTerceiro = (updateData.decimoTerceiro as number) ?? Number(existingRecibo.decimoTerceiro);
     const registro = (updateData.registro as number) ?? Number(existingRecibo.registro);
     const alteracao = (updateData.alteracao as number) ?? Number(existingRecibo.alteracao);
+    const matExp = (updateData.materialExpediente as number) ?? Number(existingRecibo.materialExpediente);
     const outros = (updateData.outros as number) ?? Number(existingRecibo.outros);
 
     updateData.total = calculateTotal({
@@ -112,7 +114,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       decimoTerceiro,
       registro,
       alteracao,
-      materialExpediente: MATERIAL_EXPEDIENTE,
+      materialExpediente: matExp,
       outros,
     });
 
