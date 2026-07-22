@@ -144,13 +144,16 @@ export default function ReciboWizard({
       case 1:
         return true;
       case 2:
-        return formData.honorario > 0;
+        return true;
       default:
         return true;
     }
   };
 
   const handleSubmit = async () => {
+    // Recibo avulso: abre a aba do PDF já no clique (antes de qualquer await),
+    // senão o bloqueador de pop-up barra a abertura depois do fetch.
+    const pdfTab = isAvulso && !isEditing ? window.open("", "_blank") : null;
     setLoading(true);
     setError("");
 
@@ -181,14 +184,22 @@ export default function ReciboWizard({
         body: JSON.stringify(body),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || "Erro ao salvar recibo");
+      }
+
+      // Abre o PDF do recibo avulso recém-emitido na aba já aberta no clique.
+      if (pdfTab) {
+        const novoId = data?.data?.id;
+        if (novoId) pdfTab.location.href = `/api/recibos/${novoId}/pdf`;
+        else pdfTab.close();
       }
 
       onSuccess();
       onClose();
     } catch (err) {
+      if (pdfTab && !pdfTab.closed) pdfTab.close();
       setError(err instanceof Error ? err.message : "Erro ao salvar recibo");
     } finally {
       setLoading(false);
@@ -484,7 +495,6 @@ export default function ReciboWizard({
                 label="Honorários Contábeis"
                 value={formData.honorario}
                 onChange={(val) => setFormData((prev) => ({ ...prev, honorario: val }))}
-                required
               />
               <CurrencyInput
                 label="13º Salário"
