@@ -336,7 +336,7 @@ export default function ReciboWizard({
                   label="Cliente"
                   options={clientes.map((c) => ({
                     value: c.id,
-                    label: c.nome,
+                    label: c.ativo === false ? `${c.nome} — Inativa` : c.nome,
                     sublabel: c.cnpj,
                   }))}
                   value={clienteId}
@@ -358,7 +358,14 @@ export default function ReciboWizard({
                       {getInitials(selectedCliente.nome)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[var(--text-primary)] text-[16px] font-semibold truncate">{selectedCliente.nome}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[var(--text-primary)] text-[16px] font-semibold truncate">{selectedCliente.nome}</p>
+                        {selectedCliente.ativo === false && (
+                          <span className="inline-flex shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-[var(--bg-secondary)] text-[var(--text-tertiary)]">
+                            Inativa
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[var(--text-tertiary)] text-[13px] font-mono">{selectedCliente.cnpj}</p>
                       {selectedCliente.honorarioPadrao && (
                         <p className="text-[#00AEEF] text-[13px] font-medium mt-1">

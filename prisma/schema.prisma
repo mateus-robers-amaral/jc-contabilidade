@@ -25,6 +25,7 @@ model Cliente {
   email            String?
   responsavel      String?
   honorarioPadrao  Decimal? @db.Decimal(10, 2)
+  ativo            Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   recibos          Recibo[]

@@ -47,7 +47,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const body: UpdateClienteDTO = await request.json();
-    const { nome, cnpj, email, responsavel, honorarioPadrao } = body;
+    const { nome, cnpj, email, responsavel, honorarioPadrao, ativo } = body;
 
     // Check if client exists
     const existingCliente = await prisma.cliente.findUnique({
@@ -68,6 +68,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (email !== undefined) updateData.email = email || undefined;
     if (responsavel !== undefined) updateData.responsavel = responsavel || undefined;
     if (honorarioPadrao !== undefined) (updateData as Record<string, unknown>).honorarioPadrao = honorarioPadrao ? Number(honorarioPadrao) : null;
+    if (ativo !== undefined) updateData.ativo = Boolean(ativo);
 
     // Handle CNPJ update
     if (cnpj) {

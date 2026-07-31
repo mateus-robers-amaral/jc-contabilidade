@@ -20,10 +20,11 @@ export async function POST(request: NextRequest) {
     const [year, month] = mesReferencia.split("-").map(Number);
     const mesReferenciaDate = new Date(year, month - 1, 1);
 
-    // Get all clients with honorarioPadrao set
+    // Get all active clients with honorarioPadrao set
     const clientes = await prisma.cliente.findMany({
       where: {
         honorarioPadrao: { not: null },
+        ativo: true,
       },
       select: {
         id: true,
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     if (clientes.length === 0) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: "Nenhum cliente possui honorário padrão cadastrado" },
+        { success: false, error: "Nenhum cliente ativo possui honorário padrão cadastrado" },
         { status: 400 }
       );
     }

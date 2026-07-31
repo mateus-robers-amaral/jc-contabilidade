@@ -16,6 +16,7 @@ interface ClienteWizardProps {
     email: string | null;
     responsavel: string | null;
     honorarioPadrao: number | null;
+    ativo: boolean;
   } | null;
 }
 
@@ -69,6 +70,7 @@ export default function ClienteWizard({
   const [responsavel, setResponsavel] = useState("");
   const [email, setEmail] = useState("");
   const [honorarioPadrao, setHonorarioPadrao] = useState(0);
+  const [ativo, setAtivo] = useState(true);
   const [cnpjLoading, setCnpjLoading] = useState(false);
   const [cnpjStatus, setCnpjStatus] = useState<"idle" | "found" | "not_found" | "error">("idle");
   const [submitting, setSubmitting] = useState(false);
@@ -88,6 +90,7 @@ export default function ClienteWizard({
         setResponsavel(editingCliente.responsavel || "");
         setEmail(editingCliente.email || "");
         setHonorarioPadrao(editingCliente.honorarioPadrao ? Number(editingCliente.honorarioPadrao) : 0);
+        setAtivo(editingCliente.ativo);
         lastFetchedCnpj.current = digits;
         setCnpjStatus("idle");
       } else {
@@ -97,6 +100,7 @@ export default function ClienteWizard({
         setResponsavel("");
         setEmail("");
         setHonorarioPadrao(0);
+        setAtivo(true);
         setCnpjStatus("idle");
         lastFetchedCnpj.current = "";
       }
@@ -201,6 +205,7 @@ export default function ClienteWizard({
           email: email.trim() || "",
           responsavel: responsavel.trim() || "",
           honorarioPadrao: honorarioPadrao > 0 ? honorarioPadrao : null,
+          ativo,
         }),
       });
 
@@ -382,6 +387,29 @@ export default function ClienteWizard({
           Valor pré-preenchido ao criar recibos. Também usado na emissão em lote.
         </p>
       </div>
+
+      <label
+        className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+          ativo
+            ? "border-[#34C759] bg-[rgba(52,199,89,0.05)]"
+            : "border-[var(--border-primary)] hover:border-[var(--text-tertiary)]"
+        }`}
+      >
+        <input
+          type="checkbox"
+          checked={ativo}
+          onChange={(e) => setAtivo(e.target.checked)}
+          className="mt-0.5 size-[18px] accent-[#34C759] cursor-pointer"
+        />
+        <span>
+          <span className="block text-[var(--text-primary)] text-[14px] font-semibold">
+            Empresa ativa
+          </span>
+          <span className="block text-[var(--text-tertiary)] text-[12px] mt-0.5">
+            Empresas inativas não entram na emissão de recibos em lote.
+          </span>
+        </span>
+      </label>
     </div>
   );
 
@@ -445,9 +473,18 @@ export default function ClienteWizard({
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-[var(--text-tertiary)] text-[20px]">mail</span>
             <div>
-              <p className="text-[12px] text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
-                Contato e Valores
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-[12px] text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
+                  Contato e Valores
+                </p>
+                <span
+                  className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                    ativo ? "bg-[#34C759] text-white" : "bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]"
+                  }`}
+                >
+                  {ativo ? "Ativa" : "Inativa"}
+                </span>
+              </div>
               <p className="text-[14px] text-[var(--text-primary)] mt-0.5">
                 {email || <span className="text-[var(--text-tertiary)] italic">Nenhum e-mail informado</span>}
               </p>

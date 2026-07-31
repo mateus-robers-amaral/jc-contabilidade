@@ -26,14 +26,21 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     const searchDigits = parseCNPJ(search);
-    const where = search
-      ? {
-          OR: [
-            { nome: { contains: search, mode: "insensitive" as const } },
-            ...(searchDigits ? [{ cnpj: { contains: searchDigits } }] : []),
-          ],
-        }
-      : {};
+    const statusParam = searchParams.get("status") || "todos";
+    const ativoFilter =
+      statusParam === "ativos" ? { ativo: true } : statusParam === "inativos" ? { ativo: false } : {};
+
+    const where = {
+      ...ativoFilter,
+      ...(search
+        ? {
+            OR: [
+              { nome: { contains: search, mode: "insensitive" as const } },
+              ...(searchDigits ? [{ cnpj: { contains: searchDigits } }] : []),
+            ],
+          }
+        : {}),
+    };
 
     // Aggregate sorts need in-memory processing
     const isAggregateSort = sortBy === "totalRecibos" || sortBy === "recibosCount";
@@ -122,7 +129,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body: CreateClienteDTO = await request.json();
-    const { nome, cnpj, email, responsavel, honorarioPadrao } = body;
+    const { nome, cnpj, email, responsavel, honorarioPadrao, ativo } = body;
 
     if (!nome || !cnpj) {
       return NextResponse.json<ApiResponse>(
@@ -159,6 +166,7 @@ export async function POST(request: NextRequest) {
         email: email || null,
         responsavel: responsavel || null,
         honorarioPadrao: honorarioPadrao ? Number(honorarioPadrao) : null,
+        ativo: ativo !== undefined ? ativo : true,
       },
     });
 

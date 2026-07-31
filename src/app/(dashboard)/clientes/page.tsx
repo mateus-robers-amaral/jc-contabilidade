@@ -24,15 +24,23 @@ const SORT_OPTIONS = [
   { value: "recibosCount-desc", label: "Mais recibos" },
 ];
 
+const STATUS_OPTIONS = [
+  { value: "todos", label: "Todas" },
+  { value: "ativos", label: "Ativas" },
+  { value: "inativos", label: "Inativas" },
+];
+
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<ClienteWithStats[]>([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sortValue, setSortValue] = useState("nome-asc");
+  const [statusFilter, setStatusFilter] = useState("todos");
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editingCliente, setEditingCliente] = useState<ClienteWithStats | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<ClienteWithStats | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const fetchClientes = useCallback(async () => {
     setLoading(true);
@@ -43,6 +51,7 @@ export default function ClientesPage() {
         limit: pagination.limit.toString(),
         sortBy,
         sortOrder,
+        status: statusFilter,
       });
       if (search) params.append("search", search);
 
@@ -58,7 +67,7 @@ export default function ClientesPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, search, sortValue]);
+  }, [pagination.page, pagination.limit, search, sortValue, statusFilter]);
 
   useEffect(() => {
     fetchClientes();
@@ -81,6 +90,23 @@ export default function ClientesPage() {
       }
     } catch (error) {
       console.error("Error deleting cliente:", error);
+    }
+  };
+
+  const handleToggleAtivo = async (cliente: ClienteWithStats) => {
+    setTogglingId(cliente.id);
+    try {
+      const res = await fetch(`/api/clientes/${cliente.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ativo: !cliente.ativo }),
+      });
+      const data: ApiResponse = await res.json();
+      if (data.success) fetchClientes();
+    } catch (error) {
+      console.error("Error toggling cliente:", error);
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -114,6 +140,23 @@ export default function ClientesPage() {
               className="w-full h-full bg-transparent pl-11 pr-4 rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none text-[14px] font-normal"
               placeholder="Buscar por nome ou CNPJ..."
             />
+          </div>
+        </div>
+        <div className="relative flex items-center h-12 min-w-[160px] rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] focus-within:border-[#00AEEF] focus-within:ring-4 focus-within:ring-[rgba(0,174,239,0.15)] transition-all">
+          <div className="absolute left-4 text-[var(--text-tertiary)] flex items-center justify-center pointer-events-none">
+            <span className="material-symbols-outlined text-[20px]">filter_alt</span>
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPagination((prev) => ({ ...prev, page: 1 })); }}
+            className="w-full h-full bg-transparent pl-11 pr-4 rounded-xl text-[var(--text-primary)] focus:outline-none text-[14px] font-normal appearance-none cursor-pointer"
+          >
+            {STATUS_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <div className="absolute right-3 text-[var(--text-tertiary)] pointer-events-none">
+            <span className="material-symbols-outlined text-[18px]">expand_more</span>
           </div>
         </div>
         <div className="relative flex items-center h-12 min-w-[200px] rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] focus-within:border-[#00AEEF] focus-within:ring-4 focus-within:ring-[rgba(0,174,239,0.15)] transition-all">
@@ -175,7 +218,18 @@ export default function ClientesPage() {
                           {getInitials(cliente.nome)}
                         </div>
                         <div className="min-w-0">
-                          <div className="text-[14px] font-semibold text-[var(--text-primary)] truncate">{cliente.nome}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-[14px] font-semibold text-[var(--text-primary)] truncate">{cliente.nome}</div>
+                            <span
+                              className={`inline-flex shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                cliente.ativo
+                                  ? "bg-[rgba(52,199,89,0.12)] text-[#34C759]"
+                                  : "bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]"
+                              }`}
+                            >
+                              {cliente.ativo ? "Ativa" : "Inativa"}
+                            </span>
+                          </div>
                           <div className="text-[12px] text-[var(--text-tertiary)]">
                             Cadastrado em {new Date(cliente.createdAt).toLocaleDateString("pt-BR")}
                           </div>
@@ -197,6 +251,24 @@ export default function ClientesPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => handleToggleAtivo(cliente)}
+                          disabled={togglingId === cliente.id}
+                          className={`flex items-center justify-center size-9 rounded-full transition-colors disabled:opacity-50 ${
+                            cliente.ativo
+                              ? "text-[#34C759] hover:bg-[rgba(52,199,89,0.1)]"
+                              : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]"
+                          }`}
+                          title={cliente.ativo ? "Desativar empresa" : "Ativar empresa"}
+                        >
+                          <span className="material-symbols-outlined text-[22px]">
+                            {togglingId === cliente.id
+                              ? "progress_activity"
+                              : cliente.ativo
+                              ? "toggle_on"
+                              : "toggle_off"}
+                          </span>
+                        </button>
                         <button
                           onClick={() => { setEditingCliente(cliente); setWizardOpen(true); }}
                           className="flex items-center justify-center size-9 rounded-full text-[var(--text-tertiary)] hover:text-[#00AEEF] hover:bg-[rgba(0,174,239,0.1)] transition-colors"

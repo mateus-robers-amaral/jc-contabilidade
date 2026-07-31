@@ -14,6 +14,7 @@ export interface Cliente {
   email: string | null;
   responsavel: string | null;
   honorarioPadrao: number | null;
+  ativo: boolean;
   createdAt: Date;
   updatedAt: Date;
   recibos?: Recibo[];
@@ -53,6 +54,7 @@ export interface CreateClienteDTO {
   email?: string;
   responsavel?: string;
   honorarioPadrao?: number;
+  ativo?: boolean;
 }
 
 export interface UpdateClienteDTO {
@@ -61,6 +63,7 @@ export interface UpdateClienteDTO {
   email?: string;
   responsavel?: string;
   honorarioPadrao?: number;
+  ativo?: boolean;
 }
 
 export interface CreateReciboDTO {
